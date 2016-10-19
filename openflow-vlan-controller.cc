@@ -919,16 +919,22 @@ int VlanController::GetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const i
 	return vid;
 }
 
-std::vector<int> // Now Loading...
+std::vector<int>
 VlanController::EnumeratePorts (const Ptr<OpenFlowSwitchNetDevice> swtch, const int vid)
 {
 	std::vector<int> v;
-	std::map<int, int> m;
+	int i;
 
-	m = std::map[swtch];
+	for (i = 0; i <= 65535; i++) {
+		if (vid == vid_map[swtch][i]) {
+			v.push_back(i);
+		}
+	}
 
+	return v;
+}
 
-void // Now Loading...
+void // Now Programming...
 VlanController::ReceiveFromSwitch (Ptr<OpenflowSwitchNetDevice> swtch, ofpbuf* buffer)
 {
 	if (m_switches.find (swtch) == m_switches.end ())
@@ -936,6 +942,19 @@ VlanController::ReceiveFromSwitch (Ptr<OpenflowSwitchNetDevice> swtch, ofpbuf* b
 		NS_LOG_ERROR ("Can't receive from this switch, not registered to the Controller.");
 		return;
 	}
+
+	// We have received any packet at this point, so we pull the header to figure out what type of packet we're handling.
+	uint8_t type = GetPacketType (buffer);
+
+	if (type == OFPT_PACKET_IN) // The switch didn't understand the packet it received, so it forwarded it to the controller.
+	{
+		ofp_packet_in * opi = (ofp_packet_in*)ofpbuf_try_pull (buffer, offsetof (ofp_packet_in, data));
+		int port = ntohs (opi->in_port);
+
+		// Create matching key
+		sw_flow_key key;
+		key.wildcards = 0;
+		flow_extract (buffer, port != -1 ? port : OFPP_NONE, &key_flow);
 
 
 
