@@ -11,8 +11,6 @@
 
 namespace ns3 {
 
-class OpenFlowSwitchNetDevice:
-
 namespace ofi {
 
 class VlanController : public LearningController
@@ -32,7 +30,7 @@ public:
 
 
 private:
-	std::map<OpenFlowSwitchNetDevice*, std::map<int, int>> vid_map;
+	std::map<OpenFlowSwitchNetDevice*, std::map<int, int> > vid_map;
 };
 
 }
