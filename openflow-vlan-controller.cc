@@ -93,17 +93,53 @@ VlanController::ReceiveFromSwitch (Ptr<OpenflowSwitchNetDevice> swtch, ofpbuf* b
 		key.wildcards = 0;
 		flow_extract (buffer, port != -1 ? port : OFPP_NONE, &key_flow);
 
-		int vid = GetVlanId(swtch, port);		
+		int vid = key_flow.dl_vlan;		
 		std::vector<int> v = EnumeratePortsWithoutInport (swtch, port, vid);
-		
-		// Create output-to-port action
-		ofp_action_output x[v.size()];
 
-		for (int i = 0; i < v.size(); i++)
+		Mac48Address dst_addr;
+		dst_addr.CopyFrom (key.flow.dl_dst);
+
+		if (!dst_addr.IsBroadcast ())
 		{
-			x[i].type = htons (OFPAT_OUTPUT);
-			x[i].len = htons (sizeof(ofp_action_output));
-			x[i].port = v[i];
+			LearnState_t::iterator st = m_learnState.find (dst_addr);
+			if (st != m_learnState.end ())
+			{
+				int out_port = st->second.port;
+				
+				// Create output-to-port action if already learned
+				ofp_action_output x[1];
+				x[0].type = htons (OFPAT_OUTPUT);
+				x[0].len = htons (sizeof(ofp_action_output));
+				x[0].port = out_port;
+			}
+			else
+			{
+				NS_LOG_INFO ("Setting Multicast : Don't know yet what port " << dst_addr << " is connected to");
+
+				// Create output-to-port action 
+				ofp_action_output x[v.size()];
+	
+				for (int i = 0; i < v.size(); i++)
+				{
+					x[i].type = htons (OFPAT_OUTPUT);
+					x[i].len = htons (sizeof(ofp_action_output));
+					x[i].port = v[i];
+				}
+			}
+		}
+		else
+		{
+			NS_LOG_INFO ("Setting Multicast : this packet is a broadcast");
+
+			// Create output-to-port action 
+			ofp_action_output x[v.size()];
+
+			for (int i = 0; i < v.size(); i++)
+			{
+				x[i].type = htons (OFPAT_OUTPUT);
+				x[i].len = htons (sizeof(ofp_action_output));
+				x[i].port = v[i];
+			}
 		}
 
 		// Create a new flow
