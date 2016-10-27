@@ -6,6 +6,8 @@
 #include <iostream>
 #include <fstream>
 
+#define NS3_OPENFLOW_VLAN_EXAMPLE
+
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/csma-module.h"
@@ -18,12 +20,12 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("OpenFlowVlanControllerExample");
+NS_LOG_COMPONENT_DEFINE ("VlanControllerTest");
 
 bool vlan = false;
 
 bool
-SetVlan (std::string)
+SetVlan (std::string value)
 {
 	vlan = true;
 	return true;
@@ -72,17 +74,17 @@ main (int argc, char *argv[])
 	Ptr<Node> switchNode = csmaSwitch.Get (0);
 	OpenFlowSwitchHelper swtch;
 
-	// Set VLAN ID
-	VlanController::SetVlanId (swtch, 0, 1);
-	VlanController::SetVlanId (swtch, 1, 1);
-	VlanController::SetVlanId (swtch, 2, 2);
-	VlanController::SetVlanId (swtch, 3, 2);
-
 	if (vlan)
 	{
 		Ptr<ns3::ofi::VlanController> controller = CreateObject<ns3::ofi::VlanController> ();
 		swtch.Install (switchNode, switchDevices, controller);
 	}
+
+	// Set VLAN ID
+	ns3::ofi::VlanController::SetVlanId (swtch, 0, 1);
+	ns3::ofi::VlanController::SetVlanId (swtch, 1, 1);
+	ns3::ofi::VlanController::SetVlanId (swtch, 2, 2);
+	ns3::ofi::VlanController::SetVlanId (swtch, 3, 2);
 
 	// Add internet stack to the terminals
 	InternetStackHelper internet;
@@ -108,7 +110,7 @@ main (int argc, char *argv[])
 	app.Stop (Seconds (10.0));
 
 	// Create ana optional packet sink to receive these packets
-	PacketSinkHelpert  sink ("ns3::UdpSocketFactory", Address (InetSocketAddress (Ipv4Address::GetAny(), port)));
+	PacketSinkHelper  sink ("ns3::UdpSocketFactory", Address (InetSocketAddress (Ipv4Address::GetAny(), port)));
 	app = sink.Install (terminals.Get (1));
 	app.Start (Seconds (0.0));
 
@@ -130,14 +132,14 @@ main (int argc, char *argv[])
 	// Trace output will be sent to the file "openflow-switch.tr"
 	//
 	AsciiTraceHelper ascii;
-	csma.EnableAsciiAll (ascii.CreateFileStream ("openflow-switch.tr"));
+	csma.EnableAsciiAll (ascii.CreateFileStream ("openflow-vlan-switch.tr"));
 
 	//
 	// Also configure some tcpdump traces; each interface will be traced.
-	// The output files will be named: openflow-switch-<nodeId>-<interfaceId>.pcap
+	// The output files will be named: openflow-vlan-switch-<nodeId>-<interfaceId>.pcap
 	// and can be read by the "tcpdump -r" command (use "-tt" option to display timestamps correctly)
 	//
-	csma.EnablePcapAll ("openflow-switch", false);
+	csma.EnablePcapAll ("openflow-vlan-switch", false);
 
 	//
 	// Now, do the actual simulation.
@@ -148,4 +150,5 @@ main (int argc, char *argv[])
 	NS_LOG_INFO ("Done.");
 	#else
 	NS_LOG_INFO ("NS-3 OpenFlow is not enabled. Cannnot run simulation.");
-	#endif // NS3_OPENFLOW
+	#endif // NS3_OPENFLOW_VLAN_EXAMPLE
+}

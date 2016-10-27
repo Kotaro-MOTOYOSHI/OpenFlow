@@ -72,7 +72,7 @@ VlanController::EnumeratePortsWithoutInport (const Ptr<OpenFlowSwitchNetDevice> 
 }
 
 void
-VlanController::ReceiveFromSwitch (Ptr<OpenflowSwitchNetDevice> swtch, ofpbuf* buffer)
+VlanController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer)
 {
 	if (m_switches.find (swtch) == m_switches.end ())
 	{
