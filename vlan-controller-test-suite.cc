@@ -72,6 +72,12 @@ main (int argc, char *argv[])
 	Ptr<Node> switchNode = csmaSwitch.Get (0);
 	OpenFlowSwitchHelper swtch;
 
+	// Set VLAN ID
+	VlanController::SetVlanId (swtch, 0, 1);
+	VlanController::SetVlanId (swtch, 1, 1);
+	VlanController::SetVlanId (swtch, 2, 2);
+	VlanController::SetVlanId (swtch, 3, 2);
+
 	if (vlan)
 	{
 		Ptr<ns3::ofi::VlanController> controller = CreateObject<ns3::ofi::VlanController> ();
@@ -106,4 +112,40 @@ main (int argc, char *argv[])
 	app = sink.Install (terminals.Get (1));
 	app.Start (Seconds (0.0));
 
-	// openflow-switch.cc line 174
+	//
+	// Create a similar flow from n3 to n2, starting at time 1.1 seconds
+	//
+	onoff.SetAttribute ("Remote", AddressValue (InetSocketAddress (Ipv4Address  ("10.1.1.1"), port)));
+	app = onoff.Install (terminals.Get (3));
+	app.Start (Seconds (1.1));
+	app.Stop (Seconds (10.0));
+
+	app = sink.Install (terminals.Get (2));
+	app.Start (Seconds (0.0));
+
+	NS_LOG_INFO ("Configure Tracing.");
+
+	//
+	// Configure tracing of all enqueue, dequeue, and NetDevice receive events.
+	// Trace output will be sent to the file "openflow-switch.tr"
+	//
+	AsciiTraceHelper ascii;
+	csma.EnableAsciiAll (ascii.CreateFileStream ("openflow-switch.tr"));
+
+	//
+	// Also configure some tcpdump traces; each interface will be traced.
+	// The output files will be named: openflow-switch-<nodeId>-<interfaceId>.pcap
+	// and can be read by the "tcpdump -r" command (use "-tt" option to display timestamps correctly)
+	//
+	csma.EnablePcapAll ("openflow-switch", false);
+
+	//
+	// Now, do the actual simulation.
+	//
+	NS_LOG_INFO ("Run Simulation.");
+	Simulator::Run ();
+	Simulator::Destroy ();
+	NS_LOG_INFO ("Done.");
+	#else
+	NS_LOG_INFO ("NS-3 OpenFlow is not enabled. Cannnot run simulation.");
+	#endif // NS3_OPENFLOW

@@ -167,7 +167,9 @@ VlanController::ReceiveFromSwitch (Ptr<OpenflowSwitchNetDevice> swtch, ofpbuf* b
 			src_addr.CopyTo (key.flow.dl_dst);
 			dst_addr.CopyTo (key.flow.dl_src);
 			key.flow.in_port = out_port;
-			ofp // Stop.
+			ofp_flow_mod* ofm2 = BuildFlow (key, -1, OFPFC_MODIFY, x2, sizeof(x2), OFP_FLOW_PERMANENT, OFP_FLOW_PERMANENT);
+			SendToSwitch (swtch, ofm2, ofm2->header.length);
+		}
 	}
 }
 
