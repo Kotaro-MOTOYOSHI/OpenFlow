@@ -145,6 +145,29 @@ VlanController::ReceiveFromSwitch (Ptr<OpenflowSwitchNetDevice> swtch, ofpbuf* b
 		// Create a new flow
 		ofp_flow_mod* ofm = BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, OFP_FLOW_PERMANENT);
 		SendToSwitch (swtch, ofm, ofm->header.length);
+
+		// We can learn a specific port for the source address for future use.
+		Mac48Address src_addr;
+		src_addr.CopyFrom (key.flow.dl_src);
+		LearnState_t::iterator st = m_learnState.find (src_addr);
+		if (st == m_learnState.end ()) // We haven't learned our source MAC Address yet.
+		{
+			LearnState ls;
+			ls.port = in_port;
+			m_learnState.insert (std::make_pair (src_addr, ls));
+			NS_LOG_INFO ("Learned that " << src_addr << " can be found over port " << in_port);
+
+			// Learn src_addr goes to a certain port.
+			ofp_action_output x2[1];
+			x2[0].type = htons (OFPAT_OUTPUT);
+			x2[0].len = htons (sizeof(ofp_action_output));
+			x2[0].port = in_port;
+
+			// Switch MAC Addresses and ports to the flow we're modifying
+			src_addr.CopyTo (key.flow.dl_dst);
+			dst_addr.CopyTo (key.flow.dl_src);
+			key.flow.in_port = out_port;
+			ofp // Stop.
 	}
 }
 
