@@ -23,12 +23,24 @@ using namespace ns3;
 NS_LOG_COMPONENT_DEFINE ("VlanControllerTest");
 
 bool vlan = false;
+ns3::Time timeout = ns3::Seconds (0);
 
 bool
 SetVlan (std::string value)
 {
 	vlan = true;
 	return true;
+}
+
+bool
+SetTimeout (std::string value)
+{
+	try {
+		timeout = ns3::Seconds (atof (value.c_str ()));
+		return true;
+	}
+	catch (...) { return false; }
+	return false;
 }
 
 int
@@ -38,6 +50,7 @@ main (int argc, char *argv[])
 
 	CommandLine cmd;
 	cmd.AddValue ("vlan", "Enable VLAN Mode", MakeCallback (&SetVlan));
+	cmd.AddValue ("timeout", "Learning Controller Timeout", MakeCallback (&SetTimeout));
 
 	cmd.Parse (argc, argv);
 
@@ -77,6 +90,10 @@ main (int argc, char *argv[])
 	if (vlan)
 	{
 		Ptr<ns3::ofi::VlanController> controller = CreateObject<ns3::ofi::VlanController> ();
+		if (!timeout.IsZero ())
+		{
+			controller->SetAttribute ("ExpirationTime", TimeValue (timeout));
+		}
 		swtch.Install (switchNode, switchDevices, controller);
 	}
 
