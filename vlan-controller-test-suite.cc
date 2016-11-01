@@ -16,31 +16,19 @@
 #include "ns3/openflow-module.h"
 #include "ns3/log.h"
 
-#include "ns3/openflow-vlan-controller.h"
+// #include "ns3/openflow-vlan-controller.h"
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("VlanControllerTest");
 
 bool vlan = false;
-ns3::Time timeout = ns3::Seconds (0);
 
 bool
 SetVlan (std::string value)
 {
 	vlan = true;
 	return true;
-}
-
-bool
-SetTimeout (std::string value)
-{
-	try {
-		timeout = ns3::Seconds (atof (value.c_str ()));
-		return true;
-	}
-	catch (...) { return false; }
-	return false;
 }
 
 int
@@ -50,7 +38,6 @@ main (int argc, char *argv[])
 
 	CommandLine cmd;
 	cmd.AddValue ("vlan", "Enable VLAN Mode", MakeCallback (&SetVlan));
-	cmd.AddValue ("timeout", "Learning Controller Timeout", MakeCallback (&SetTimeout));
 
 	cmd.Parse (argc, argv);
 
@@ -90,18 +77,16 @@ main (int argc, char *argv[])
 	if (vlan)
 	{
 		Ptr<ns3::ofi::VlanController> controller = CreateObject<ns3::ofi::VlanController> ();
-		if (!timeout.IsZero ())
-		{
-			controller->SetAttribute ("ExpirationTime", TimeValue (timeout));
-		}
 		swtch.Install (switchNode, switchDevices, controller);
 	}
 
 	// Set VLAN ID
+	#if 0	
 	ns3::ofi::VlanController::SetVlanId (swtch, 0, 1);
 	ns3::ofi::VlanController::SetVlanId (swtch, 1, 1);
 	ns3::ofi::VlanController::SetVlanId (swtch, 2, 2);
 	ns3::ofi::VlanController::SetVlanId (swtch, 3, 2);
+	#endif
 
 	// Add internet stack to the terminals
 	InternetStackHelper internet;

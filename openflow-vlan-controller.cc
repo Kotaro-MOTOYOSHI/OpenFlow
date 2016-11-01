@@ -4,25 +4,26 @@
 
 #include "openflow-vlan-controller.h"
 
-namespace ns3 {
-
 NS_LOG_COMPONENT_DEFINE ("OpenFlowVlanController");
+NS_OBJECT_ENSURE_REGISTERED(OpenFlowVlanController);
+
+namespace ns3 {
 
 namespace ofi {
 
 TypeId VlanController::GetTypeId (void)
 {
 	static TypeId tid = TypeId ("ns3::ofi::VlanController")
-		.SetParent <LearningController> ()
-		.SetGroupName ("Openflow")
+		.SetParent<Controller> ()
+		.SetGroupName ("OpenFlow")
 		.AddConstructor<VlanController> ()
-		.AddAttribute ("ExpirationTime",
-			"Time it takes for learned MAC state entry/created flow to expire.",
-			TimeValue (Seconds (0)),
-			MakeTimeAccessor (&LearningController::m_expirationTime),
-			MakeTimeChecker ())
 		;
 	return tid;
+}
+
+TypeId VlanController::GetInstanceTypeId () const
+{
+	return GetTypeId ();
 }
 
 void
@@ -77,7 +78,7 @@ VlanController::EnumeratePortsWithoutInport (const Ptr<OpenFlowSwitchNetDevice> 
 }
 
 void
-VlanController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer)
+VlanController::ReceiveFromSwitch (Ptr<OpenflowSwitchNetDevice> swtch, ofpbuf* buffer)
 {
 	if (m_switches.find (swtch) == m_switches.end ())
 	{
@@ -148,7 +149,7 @@ VlanController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* b
 		}
 
 		// Create a new flow
-		ofp_flow_mod* ofm = BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+		ofp_flow_mod* ofm = BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, OFP_FLOW_PERMANENT);
 		SendToSwitch (swtch, ofm, ofm->header.length);
 
 		// We can learn a specific port for the source address for future use.
@@ -172,7 +173,7 @@ VlanController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* b
 			src_addr.CopyTo (key.flow.dl_dst);
 			dst_addr.CopyTo (key.flow.dl_src);
 			key.flow.in_port = out_port;
-			ofp_flow_mod* ofm2 = BuildFlow (key, -1, OFPFC_MODIFY, x2, sizeof(x2), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+			ofp_flow_mod* ofm2 = BuildFlow (key, -1, OFPFC_MODIFY, x2, sizeof(x2), OFP_FLOW_PERMANENT, OFP_FLOW_PERMANENT);
 			SendToSwitch (swtch, ofm2, ofm2->header.length);
 		}
 	}

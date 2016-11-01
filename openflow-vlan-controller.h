@@ -13,10 +13,11 @@ namespace ns3 {
 
 namespace ofi {
 
-class VlanController : public LearningController
+class VlanController : public Controller
 {
 public:
 	static TypeId GetTypeId (void);
+	TypeId GetInstanceTypeId () const;
 
 	void SetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port, const int vid);
 
