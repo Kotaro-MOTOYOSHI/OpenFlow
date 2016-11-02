@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-
-#ifdef NS3_OPENFLOW_VLAN_CONTROLLER
+#define NS3_OPENFLOW_VLAN_CONTROLLER
+#ifndef NS3_OPENFLOW_VLAN_CONTROLLER
 
 #include "openflow-vlan-controller.h"
 
@@ -14,7 +14,7 @@ namespace ofi {
 TypeId VlanController::GetTypeId (void)
 {
 	static TypeId tid = TypeId ("VlanController")
-		.SetParent<Controller> ()
+		.SetParent<LearningController> ()
 		.SetGroupName ("OpenFlow")
 		.AddConstructor<VlanController> ()
 		.AddAttribute ("ExpirationTime",

@@ -46,7 +46,7 @@ SetTimeout (std::string value)
 int
 main (int argc, char *argv[])
 {
-	#ifdef NS3_OPENFLOW_VLAN_EXAMPLE
+	#ifndef NS3_OPENFLOW_VLAN_EXAMPLE
 
 	CommandLine cmd;
 	cmd.AddValue ("vlan", "Enable VLAN Mode", MakeCallback (&SetVlan));

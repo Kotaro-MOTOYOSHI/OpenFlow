@@ -13,7 +13,7 @@ namespace ns3 {
 
 namespace ofi {
 
-class VlanController : public Controller
+class VlanController : public LearningController
 {
 public:
 	static TypeId GetTypeId (void);
