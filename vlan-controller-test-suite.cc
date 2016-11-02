@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-#define NS3_OPENFLOW_VLAN_EXAMPLE
+//#define NS3_OPENFLOW_VLAN_EXAMPLE
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -22,8 +22,16 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("VlanControllerTest");
 
+bool verbose = false;
 bool vlan = false;
 ns3::Time timeout = ns3::Seconds (0);
+
+bool
+SetVerbose (std::string value)
+{
+	verbose = true;
+	return true;
+}
 
 bool
 SetVlan (std::string value)
@@ -45,16 +53,17 @@ SetTimeout (std::string value)
 
 int
 main (int argc, char *argv[])
-{
-	#ifndef NS3_OPENFLOW_VLAN_EXAMPLE
+{	
+	#ifdef NS3_OPENFLOW_VLAN_EXAMPLE
 
 	CommandLine cmd;
+	cmd.AddValue ("verbose", "Verbose (turns on logging).", MakeCallback (&SetVerbose));
 	cmd.AddValue ("vlan", "Enable VLAN Mode", MakeCallback (&SetVlan));
 	cmd.AddValue ("timeout", "Learning Controller Timeout", MakeCallback (&SetTimeout));
 
 	cmd.Parse (argc, argv);
 
-	if (vlan)
+	if (verbose)
 	{
 		LogComponentEnable ("OpenFlowCsmaSwitchExample", LOG_LEVEL_INFO);
 		LogComponentEnable ("OpenFlowInterface", LOG_LEVEL_INFO);
@@ -89,7 +98,7 @@ main (int argc, char *argv[])
 
 	if (vlan)
 	{
-		Ptr<VlanController> controller = CreateObject<VlanController> ();
+		Ptr<ns3::ofi::VlanController> controller = CreateObject<ns3::ofi::VlanController> ();
 		if (!timeout.IsZero ())
 		{
 			controller->SetAttribute ("ExpirationTime", TimeValue (timeout));

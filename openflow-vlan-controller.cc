@@ -1,4 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+
 #define NS3_OPENFLOW_VLAN_CONTROLLER
 #ifndef NS3_OPENFLOW_VLAN_CONTROLLER
 
