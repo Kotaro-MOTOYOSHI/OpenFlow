@@ -19,19 +19,19 @@ public:
 	static TypeId GetTypeId (void);
 	TypeId GetInstanceTypeId () const;
 
-	void SetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port, const int vid);
+	void SetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid);
 
-	int GetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port);
+	uint16_t GetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port);
 
-	std::vector<int> EnumeratePorts (const Ptr<OpenFlowSwitchNetDevice> swtch, const int vid);
+	std::vector<int> EnumeratePorts (const Ptr<OpenFlowSwitchNetDevice> swtch, const uint16_t vid);
 
-	std::vector<int> EnumeratePortsWithoutInport (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port, const int vid);
-	
+	std::vector<int> EnumeratePortsWithoutInport (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid);
+
 	void ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer);
 
 
 private:
-	std::map<OpenFlowSwitchNetDevice*, std::map<int, int> > vid_map;
+	std::map<OpenFlowSwitchNetDevice*, std::map<int, uint16_t> > vid_map;
 };
 
 }

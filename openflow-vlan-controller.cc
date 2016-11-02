@@ -33,15 +33,15 @@ TypeId VlanController::GetInstanceTypeId () const
 }
 
 void
-VlanController::SetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port, const int vid)
+VlanController::SetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid)
 {
 	vid_map[swtch][port] = vid;
 }
 
-int
+uint16_t
 VlanController::GetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port)
 {
-	int vid;
+	uint16_t vid;
 	if (vid_map.count(swtch) > 0 && vid_map[swtch].count(port) > 0)
 	{
 		vid = vid_map[swtch][port];
@@ -54,7 +54,7 @@ VlanController::GetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int p
 }
 
 std::vector<int>
-VlanController::EnumeratePorts (const Ptr<OpenFlowSwitchNetDevice> swtch, const int vid)
+VlanController::EnumeratePorts (const Ptr<OpenFlowSwitchNetDevice> swtch, const uint16_t vid)
 {
 	std::vector<int> v;
 	for (auto itr = vid_map.begin(); itr != vid_map.end(); ++itr)
@@ -68,7 +68,7 @@ VlanController::EnumeratePorts (const Ptr<OpenFlowSwitchNetDevice> swtch, const 
 }
 
 std::vector<int>
-VlanController::EnumeratePortsWithoutInport (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port, const int vid)
+VlanController::EnumeratePortsWithoutInport (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid)
 {
 	std::vector<int> v;
 	for (auto itr = vid_map.begin(); itr != vid_map.end(); ++itr)
@@ -104,9 +104,29 @@ VlanController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* b
 		// Create matching key
 		sw_flow_key key;
 		key.wildcards = 0;
-		flow_extract (buffer, port != -1 ? port : OFPP_NONE, &key_flow);
+		flow_extract (buffer, port != -1 ? port : OFPP_NONE, &key.flow);
 
-		int vid = key_flow.dl_vlan;		
+		uint16_t vid = key.flow.dl_vlan;
+
+		// Set VLAN ID, if buffer do not have VLAN ID
+		if (vid == OFP_VLAN_NONE)
+		{
+			vid = GetVlanId (swtch, port);
+			
+			ofp_action_vlan_vid v[1];
+			v[0].type = htons (OFPAT_SET_VLAN_VID);
+			v[0].len = htons (sizeof(ofp_action_vlan_vid));
+			v[0].vlan_vid = vid;
+
+			NS_LOG_INFO ("Set VLAN ID : switch=" << swtch << ", port=" << port << ", VLAN ID=" << vid);
+		}
+
+		// Check VLAN ID
+		if (vid != GetVlanId (swtch, port))
+		{
+			NS_LOG_ERROR ("Fatal Error: different VLAN ID has been set between two!");
+		}
+
 		std::vector<int> v = EnumeratePortsWithoutInport (swtch, port, vid);
 
 		Mac48Address dst_addr;
