@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 
-#ifndef OPENFLOW_VLAN_CONTROLLER_H
 #define OPENFLOW_VLAN_CONTROLLER_H
+#ifndef OPENFLOW_VLAN_CONTROLLER_H
 
 #include "ns3/openflow-interface.h"
 

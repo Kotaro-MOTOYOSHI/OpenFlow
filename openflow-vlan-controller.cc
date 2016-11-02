@@ -13,7 +13,7 @@ namespace ofi {
 
 TypeId VlanController::GetTypeId (void)
 {
-	static TypeId tid = TypeId ("ns3::ofi::VlanController")
+	static TypeId tid = TypeId ("VlanController")
 		.SetParent<Controller> ()
 		.SetGroupName ("OpenFlow")
 		.AddConstructor<VlanController> ()

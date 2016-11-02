@@ -16,7 +16,7 @@
 #include "ns3/openflow-module.h"
 #include "ns3/log.h"
 
-// #include "ns3/openflow-vlan-controller.h"
+#include "openflow-vlan-controller.h"
 
 using namespace ns3;
 
@@ -89,7 +89,7 @@ main (int argc, char *argv[])
 
 	if (vlan)
 	{
-		Ptr<ns3::ofi::VlanController> controller = CreateObject<ns3::ofi::VlanController> ();
+		Ptr<VlanController> controller = CreateObject<VlanController> ();
 		if (!timeout.IsZero ())
 		{
 			controller->SetAttribute ("ExpirationTime", TimeValue (timeout));
