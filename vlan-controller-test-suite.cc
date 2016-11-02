@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-//#define NS3_OPENFLOW_VLAN_EXAMPLE
+#define NS3_OPENFLOW_VLAN_EXAMPLE
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -54,7 +54,7 @@ SetTimeout (std::string value)
 int
 main (int argc, char *argv[])
 {	
-	#ifdef NS3_OPENFLOW_VLAN_EXAMPLE
+	#ifndef NS3_OPENFLOW_VLAN_EXAMPLE
 
 	CommandLine cmd;
 	cmd.AddValue ("verbose", "Verbose (turns on logging).", MakeCallback (&SetVerbose));

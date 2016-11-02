@@ -38,7 +38,8 @@ VlanController::SetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int p
 	vid_map[swtch][port] = vid;
 }
 
-int VlanController::GetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port)
+int
+VlanController::GetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port)
 {
 	int vid;
 	if (vid_map.count(swtch) > 0 && vid_map[swtch].count(port) > 0)
