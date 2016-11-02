@@ -6,8 +6,6 @@
 #include <iostream>
 #include <fstream>
 
-#define NS3_OPENFLOW_VLAN_EXAMPLE
-
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/csma-module.h"
@@ -54,8 +52,6 @@ SetTimeout (std::string value)
 int
 main (int argc, char *argv[])
 {	
-	#ifndef NS3_OPENFLOW_VLAN_EXAMPLE
-
 	CommandLine cmd;
 	cmd.AddValue ("verbose", "Verbose (turns on logging).", MakeCallback (&SetVerbose));
 	cmd.AddValue ("vlan", "Enable VLAN Mode", MakeCallback (&SetVlan));
@@ -65,7 +61,7 @@ main (int argc, char *argv[])
 
 	if (verbose)
 	{
-		LogComponentEnable ("OpenFlowCsmaSwitchExample", LOG_LEVEL_INFO);
+		LogComponentEnable ("VlanControllerTest", LOG_LEVEL_INFO);
 		LogComponentEnable ("OpenFlowInterface", LOG_LEVEL_INFO);
 		LogComponentEnable ("OpenFlowSwitchNetDevice", LOG_LEVEL_INFO);
 	}
@@ -98,7 +94,7 @@ main (int argc, char *argv[])
 
 	if (vlan)
 	{
-		Ptr<ns3::ofi::VlanController> controller = CreateObject<ns3::ofi::VlanController> ();
+		Ptr<VlanController> controller = CreateObject<VlanController> ();
 		if (!timeout.IsZero ())
 		{
 			controller->SetAttribute ("ExpirationTime", TimeValue (timeout));
@@ -176,7 +172,7 @@ main (int argc, char *argv[])
 	Simulator::Run ();
 	Simulator::Destroy ();
 	NS_LOG_INFO ("Done.");
-	#else
-	NS_LOG_INFO ("NS-3 OpenFlow is not enabled. Cannnot run simulation.");
-	#endif // NS3_OPENFLOW_VLAN_EXAMPLE
+//	#else
+//	NS_LOG_INFO ("NS-3 OpenFlow is not enabled. Cannnot run simulation.");
+//	#endif // NS3_OPENFLOW_VLAN_EXAMPLE
 }
