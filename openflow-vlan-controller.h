@@ -17,6 +17,7 @@ class VlanController : public ns3::ofi::LearningController
 {
 public:
 	static ns3::TypeId GetTypeId (void);
+
 	ns3::TypeId GetInstanceTypeId () const;
 
 	void SetVlanId (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid);
@@ -31,7 +32,8 @@ public:
 
 
 private:
-	std::map<ns3::OpenFlowSwitchNetDevice*, std::map<int, uint16_t> > vid_map;
+	typedef std::multimap<ns3::Ptr<ns3::OpenFlowSwitchNetDevice>, std::map<int, uint16_t> > Vid_map_t;
+	Vid_map_t vid_map;
 };
 
 //}

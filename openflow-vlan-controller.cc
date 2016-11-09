@@ -1,45 +1,38 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 
-#define NS3_OPENFLOW_VLAN_CONTROLLER
-#ifndef NS3_OPENFLOW_VLAN_CONTROLLER
-
 #include "openflow-vlan-controller.h"
 
-NS_LOG_COMPONENT_DEFINE ("OpenFlowVlanController");
-NS_OBJECT_ENSURE_REGISTERED(OpenFlowVlanController);
+NS_LOG_COMPONENT_DEFINE ("VlanController");
+NS_OBJECT_ENSURE_REGISTERED(VlanController);
 
-namespace ns3 {
-
-namespace ofi {
-
-TypeId VlanController::GetTypeId (void)
+ns3::TypeId VlanController::GetTypeId (void)
 {
-	static TypeId tid = TypeId ("VlanController")
-		.SetParent<LearningController> ()
+	static ns3::TypeId tid = ns3::TypeId ("VlanController")
+		.SetParent<ns3::ofi::LearningController> ()
 		.SetGroupName ("OpenFlow")
 		.AddConstructor<VlanController> ()
 		.AddAttribute ("ExpirationTime",
 			"Time it takes for learned MAC state entry/created flow to expire.",
-			TimeValue (Seconds (0)),
-			MakeTimeAccessor (&LearningController::m_expirationTime),
-			MakeTimeChecker ())
+			ns3::TimeValue (ns3::Seconds (0)),
+			ns3::MakeTimeAccessor (&ns3::ofi::LearningController::m_expirationTime),
+			ns3::MakeTimeChecker ())
 		;
 	return tid;
 }
 
-TypeId VlanController::GetInstanceTypeId () const
+ns3::TypeId VlanController::GetInstanceTypeId () const
 {
 	return GetTypeId ();
 }
 
 void
-VlanController::SetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid)
+VlanController::SetVlanId (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid)
 {
 	vid_map[swtch][port] = vid;
 }
 
 uint16_t
-VlanController::GetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port)
+VlanController::GetVlanId (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port)
 {
 	uint16_t vid;
 	if (vid_map.count(swtch) > 0 && vid_map[swtch].count(port) > 0)
@@ -54,10 +47,10 @@ VlanController::GetVlanId (const Ptr<OpenFlowSwitchNetDevice> swtch, const int p
 }
 
 std::vector<int>
-VlanController::EnumeratePorts (const Ptr<OpenFlowSwitchNetDevice> swtch, const uint16_t vid)
+VlanController::EnumeratePorts (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const uint16_t vid)
 {
 	std::vector<int> v;
-	for (auto itr = vid_map.begin(); itr != vid_map.end(); ++itr)
+	for (Vid_map_t::iterator itr = vid_map.begin(); itr != vid_map.end(); ++itr)
 	{
 		if (itr->second == vid)
 		{
@@ -68,10 +61,10 @@ VlanController::EnumeratePorts (const Ptr<OpenFlowSwitchNetDevice> swtch, const 
 }
 
 std::vector<int>
-VlanController::EnumeratePortsWithoutInport (const Ptr<OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid)
+VlanController::EnumeratePortsWithoutInport (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid)
 {
 	std::vector<int> v;
-	for (auto itr = vid_map.begin(); itr != vid_map.end(); ++itr)
+	for (Vid_map_t::iterator itr = vid_map.begin(); itr != vid_map.end(); ++itr)
 	{
 		if (itr->second == vid)
 		{
@@ -85,7 +78,7 @@ VlanController::EnumeratePortsWithoutInport (const Ptr<OpenFlowSwitchNetDevice> 
 }
 
 void
-VlanController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer)
+VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer)
 {
 	if (m_switches.find (swtch) == m_switches.end ())
 	{
@@ -94,7 +87,7 @@ VlanController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* b
 	}
 
 	// We have received any packet at this point, so we pull the header to figure out what type of packet we're handling.
-	uint8_t type = GetPacketType (buffer);
+	uint8_t type = ns3::ofi::Controller::GetPacketType (buffer);
 
 	if (type == OFPT_PACKET_IN) // The switch didn't understand the packet it received, so it forwarded it to the controller.
 	{
@@ -129,7 +122,7 @@ VlanController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* b
 
 		std::vector<int> v = EnumeratePortsWithoutInport (swtch, port, vid);
 
-		Mac48Address dst_addr;
+		ns3::Mac48Address dst_addr;
 		dst_addr.CopyFrom (key.flow.dl_dst);
 
 		if (!dst_addr.IsBroadcast ())
@@ -152,7 +145,7 @@ VlanController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* b
 				// Create output-to-port action 
 				ofp_action_output x[v.size()];
 	
-				for (int i = 0; i < v.size(); i++)
+				for (int i = 0; i < (int)v.size(); i++)
 				{
 					x[i].type = htons (OFPAT_OUTPUT);
 					x[i].len = htons (sizeof(ofp_action_output));
@@ -167,7 +160,7 @@ VlanController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* b
 			// Create output-to-port action 
 			ofp_action_output x[v.size()];
 
-			for (int i = 0; i < v.size(); i++)
+			for (int i = 0; i < (int)v.size(); i++)
 			{
 				x[i].type = htons (OFPAT_OUTPUT);
 				x[i].len = htons (sizeof(ofp_action_output));
@@ -176,16 +169,16 @@ VlanController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* b
 		}
 
 		// Create a new flow
-		ofp_flow_mod* ofm = BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
-		SendToSwitch (swtch, ofm, ofm->header.length);
+		ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+		ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 
 		// We can learn a specific port for the source address for future use.
-		Mac48Address src_addr;
+		ns3::Mac48Address src_addr;
 		src_addr.CopyFrom (key.flow.dl_src);
 		LearnState_t::iterator st = m_learnState.find (src_addr);
 		if (st == m_learnState.end ()) // We haven't learned our source MAC Address yet.
 		{
-			LearnState ls;
+			ns3::ofi::LearningController::LearnedState ls;
 			ls.port = in_port;
 			m_learnState.insert (std::make_pair (src_addr, ls));
 			NS_LOG_INFO ("Learned that " << src_addr << " can be found over port " << in_port);
@@ -205,9 +198,3 @@ VlanController::ReceiveFromSwitch (Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* b
 		}
 	}
 }
-
-}
-
-}
-
-#endif /* NS3_OPENFLOW_VLAN_CONTROLLER */
