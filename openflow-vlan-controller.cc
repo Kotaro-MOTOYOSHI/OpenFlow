@@ -11,11 +11,11 @@ ns3::TypeId VlanController::GetTypeId (void)
 		.SetParent<ns3::ofi::LearningController> ()
 		.SetGroupName ("OpenFlow")
 		.AddConstructor<VlanController> ()
-		.AddAttribute ("ExpirationTime",
-			"Time it takes for learned MAC state entry/created flow to expire.",
-			ns3::TimeValue (ns3::Seconds (0)),
-			ns3::MakeTimeAccessor (&ns3::ofi::LearningController::m_expirationTime),
-			ns3::MakeTimeChecker ())
+//		.AddAttribute ("ExpirationTime",
+//			"Time it takes for learned MAC state entry/created flow to expire.",
+//			ns3::TimeValue (ns3::Seconds (0)),
+//			ns3::MakeTimeAccessor (&ns3::ofi::LearningController::m_expirationTime),
+//			ns3::MakeTimeChecker ())
 		;
 	return tid;
 }
