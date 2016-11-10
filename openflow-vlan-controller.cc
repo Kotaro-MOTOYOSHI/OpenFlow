@@ -165,7 +165,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				x[i].type = htons (OFPAT_OUTPUT);
 				x[i].len = htons (sizeof(ofp_action_output));
 				x[i].port = v[i];
-			} // test
+			}
 		}
 
 		// Create a new flow
