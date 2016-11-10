@@ -28,7 +28,17 @@ ns3::TypeId VlanController::GetInstanceTypeId () const
 void
 VlanController::SetVlanId (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid)
 {
-	vid_map[swtch][port] = vid;
+	Vid_map_t::iterator mm_iterator = vid_map.find(swtch);
+	if(mm_iterator == this->vid_map.end()) {
+		this->vid_map.insert(std::make_pair(swtch, boost::shared_ptr<PortVidMap>(new PortVidMap())));	
+		mm_iterator = vid_map.find(swtch);
+	} 
+	assert(mm_iterator != vid_map.end());
+        boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
+	if(p_port_vid_map->find(port) != p_port_vid_map->end()){
+		p_port_vid_map->erase(port);
+	}
+	p_port_vid_map->insert(std::make_pair(port,vid));
 }
 
 uint16_t

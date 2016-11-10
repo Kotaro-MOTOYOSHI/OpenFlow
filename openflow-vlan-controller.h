@@ -8,6 +8,8 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <memory>
+#include <boost/shared_ptr.hpp>
 
 //namespace ns3 {
 
@@ -32,7 +34,8 @@ public:
 
 
 private:
-	typedef std::multimap<ns3::Ptr<ns3::OpenFlowSwitchNetDevice>, std::map<int, uint16_t> > Vid_map_t;
+	typedef std::map<int, uint16_t> PortVidMap;
+	typedef std::multimap<ns3::Ptr<ns3::OpenFlowSwitchNetDevice>, boost::shared_ptr<PortVidMap> > Vid_map_t;
 	Vid_map_t vid_map;
 };
 
