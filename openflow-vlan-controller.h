@@ -11,10 +11,6 @@
 #include <memory>
 #include <boost/shared_ptr.hpp>
 
-//namespace ns3 {
-
-//namespace ofi {
-
 class VlanController : public ns3::ofi::LearningController
 {
 public:
@@ -37,10 +33,7 @@ private:
 	typedef std::map<int, uint16_t> PortVidMap;
 	typedef std::multimap<ns3::Ptr<ns3::OpenFlowSwitchNetDevice>, boost::shared_ptr<PortVidMap> > Vid_map_t;
 	Vid_map_t vid_map;
+	PortVidMap p_port_vid_map;
 };
-
-//}
-
-//}
 
 #endif /* OPENFLOW_VLAN_CONTROLLER_H */

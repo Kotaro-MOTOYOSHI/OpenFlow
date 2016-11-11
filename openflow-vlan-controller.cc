@@ -29,13 +29,15 @@ void
 VlanController::SetVlanId (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid)
 {
 	Vid_map_t::iterator mm_iterator = vid_map.find(swtch);
-	if(mm_iterator == this->vid_map.end()) {
+	if(mm_iterator == this->vid_map.end())
+	{
 		this->vid_map.insert(std::make_pair(swtch, boost::shared_ptr<PortVidMap>(new PortVidMap())));	
 		mm_iterator = vid_map.find(swtch);
 	} 
 	assert(mm_iterator != vid_map.end());
         boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
-	if(p_port_vid_map->find(port) != p_port_vid_map->end()){
+	if(p_port_vid_map->find(port) != p_port_vid_map->end())
+	{
 		p_port_vid_map->erase(port);
 	}
 	p_port_vid_map->insert(std::make_pair(port,vid));
@@ -45,9 +47,18 @@ uint16_t
 VlanController::GetVlanId (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port)
 {
 	uint16_t vid;
-	if (vid_map.count(swtch) > 0 && vid_map[swtch].count(port) > 0)
+	Vid_map_t::iterator mm_iterator = vid_map.find(swtch);
+	if (mm_iterator != this->vid_map.end())
 	{
-		vid = vid_map[swtch][port];
+		boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
+		if (p_port_vid_map->find(port) != p_port_vid_map->end())
+		{
+			vid = (p_port_vid_map->at(port));
+	}
+		else
+		{	
+			NS_LOG_ERROR("Not Found VLAN ID : switch = " << swtch << ", port = " << port << ".");
+		}
 	}
 	else
 	{
@@ -60,12 +71,26 @@ std::vector<int>
 VlanController::EnumeratePorts (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const uint16_t vid)
 {
 	std::vector<int> v;
-	for (Vid_map_t::iterator itr = vid_map.begin(); itr != vid_map.end(); ++itr)
+	Vid_map_t::iterator mm_iterator = vid_map.find(swtch);
+	if (mm_iterator != this->vid_map.end())
 	{
-		if (itr->second == vid)
+		boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
+		for (PortVidMap::iterator itr = p_port_vid_map->begin(); itr != p_port_vid_map->end(); ++itr)
 		{
-			v.push_back(itr->first);
+			if (itr->second == vid)
+			{
+				v.push_back(itr->first);
+			}
+			else
+			{
+				NS_LOG_INFO ("Not Found:1");
+			}
 		}
+		
+	}
+	else
+	{
+		NS_LOG_INFO ("Not Found:2");
 	}
 	return v;
 }
@@ -74,15 +99,34 @@ std::vector<int>
 VlanController::EnumeratePortsWithoutInport (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid)
 {
 	std::vector<int> v;
-	for (Vid_map_t::iterator itr = vid_map.begin(); itr != vid_map.end(); ++itr)
+	Vid_map_t::iterator mm_iterator = vid_map.find(swtch);
+	if (mm_iterator != this->vid_map.end())
 	{
-		if (itr->second == vid)
+		boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
+		for (PortVidMap::iterator itr = p_port_vid_map->begin(); itr != p_port_vid_map->end(); ++itr)
 		{
-			if (itr->first != port)
+			if (itr->second == vid)
 			{
-				v.push_back(itr->first);
+				if (itr->first == port)
+				{
+					NS_LOG_INFO ("port and itr->first = same");
+				}
+				else
+				{
+					v.push_back(itr->first);
+				}
+
+			}
+			else
+			{
+				NS_LOG_INFO ("Not Found:1");
 			}
 		}
+		
+	}
+	else
+	{
+		NS_LOG_INFO ("Not Found:2");
 	}
 	return v;
 }
@@ -95,7 +139,6 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 		NS_LOG_ERROR ("Can't receive from this switch, not registered to the Controller.");
 		return;
 	}
-
 	// We have received any packet at this point, so we pull the header to figure out what type of packet we're handling.
 	uint8_t type = ns3::ofi::Controller::GetPacketType (buffer);
 
@@ -153,7 +196,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				NS_LOG_INFO ("Setting Multicast : Don't know yet what port " << dst_addr << " is connected to");
 
 				// Create output-to-port action 
-				ofp_action_output x[v.size()];
+				ofp_action_output x[(int)v.size()];
 	
 				for (int i = 0; i < (int)v.size(); i++)
 				{
@@ -168,7 +211,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			NS_LOG_INFO ("Setting Multicast : this packet is a broadcast");
 
 			// Create output-to-port action 
-			ofp_action_output x[v.size()];
+			ofp_action_output x[(int)v.size()];
 
 			for (int i = 0; i < (int)v.size(); i++)
 			{
