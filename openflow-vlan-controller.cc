@@ -178,12 +178,15 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 		ns3::Mac48Address dst_addr;
 		dst_addr.CopyFrom (key.flow.dl_dst);
 
+		uint16_t out_port;
+		uint16_t in_port = ntohs (key.flow.in_port);
+
 		if (!dst_addr.IsBroadcast ())
 		{
 			LearnState_t::iterator st = m_learnState.find (dst_addr);
 			if (st != m_learnState.end ())
 			{
-				int out_port = st->second.port;
+				out_port = st->second.port;
 				
 				// Create output-to-port action if already learned
 				ofp_action_output x[1];
