@@ -28,12 +28,12 @@ public:
 
 	void ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer);
 
-
 private:
 	typedef std::map<int, uint16_t> PortVidMap;
 	typedef std::multimap<ns3::Ptr<ns3::OpenFlowSwitchNetDevice>, boost::shared_ptr<PortVidMap> > Vid_map_t;
 	Vid_map_t vid_map;
 	PortVidMap p_port_vid_map;
+
 protected:
 	ns3::Time vlan_expirationTime;
 };

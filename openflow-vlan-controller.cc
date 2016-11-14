@@ -86,14 +86,14 @@ VlanController::EnumeratePorts (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swt
 			}
 			else
 			{
-				NS_LOG_INFO ("Not Found:1");
+				NS_LOG_INFO ("Not Found : This switch(" << swtch << ") does not have VID(" << vid << ")");
 			}
 		}
 		
 	}
 	else
 	{
-		NS_LOG_INFO ("Not Found:2");
+		NS_LOG_INFO ("Not Found : This switch(" << swtch << ") does not exist");
 	}
 	return v;
 }
@@ -122,14 +122,14 @@ VlanController::EnumeratePortsWithoutInport (const ns3::Ptr<ns3::OpenFlowSwitchN
 			}
 			else
 			{
-				NS_LOG_INFO ("Not Found: This switch(" << swtch << ") does not have VID(" << vid << ")");
+				NS_LOG_INFO ("Not Found : This switch(" << swtch << ") does not have VID(" << vid << ")");
 			}
 		}
 		
 	}
 	else
 	{
-		NS_LOG_INFO ("Not Found:2");
+		NS_LOG_INFO ("Not Found : This switch(" << swtch << ") does not exist");
 	}
 	return v;
 }
@@ -173,7 +173,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 		// Check VLAN ID
 		if (vid != GetVlanId (swtch, port))
 		{
-			NS_LOG_ERROR ("Fatal Error: different VLAN ID has been set between two!");
+			NS_LOG_ERROR ("Fatal Error : different VLAN ID has been set between two!");
 		}
 
 		std::vector<int> v = EnumeratePortsWithoutInport (swtch, port, vid);
