@@ -1,6 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 
 #include "openflow-vlan-controller.h"
+#include "ns3/assert.h"
 
 NS_LOG_COMPONENT_DEFINE ("VlanController");
 NS_OBJECT_ENSURE_REGISTERED(VlanController);
@@ -11,11 +12,11 @@ ns3::TypeId VlanController::GetTypeId (void)
 		.SetParent<ns3::ofi::LearningController> ()
 		.SetGroupName ("OpenFlow")
 		.AddConstructor<VlanController> ()
-//		.AddAttribute ("ExpirationTime",
-//			"Time it takes for learned MAC state entry/created flow to expire.",
-//			ns3::TimeValue (ns3::Seconds (0)),
-//			ns3::MakeTimeAccessor (&ns3::ofi::LearningController::m_expirationTime),
-//			ns3::MakeTimeChecker ())
+		.AddAttribute ("ExpirationTime",
+			"Time it takes for learned MAC state entry/created flow to expire.",
+			ns3::TimeValue (ns3::Seconds (0)),
+			ns3::MakeTimeAccessor (&VlanController::vlan_expirationTime),
+			ns3::MakeTimeChecker ())
 		;
 	return tid;
 }
@@ -29,13 +30,13 @@ void
 VlanController::SetVlanId (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid)
 {
 	Vid_map_t::iterator mm_iterator = vid_map.find(swtch);
-	if(mm_iterator == this->vid_map.end())
+	if(mm_iterator == vid_map.end())
 	{
-		this->vid_map.insert(std::make_pair(swtch, boost::shared_ptr<PortVidMap>(new PortVidMap())));	
+		vid_map.insert(std::make_pair(swtch, boost::shared_ptr<PortVidMap>(new PortVidMap())));	
 		mm_iterator = vid_map.find(swtch);
 	} 
 	assert(mm_iterator != vid_map.end());
-        boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
+	boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
 	if(p_port_vid_map->find(port) != p_port_vid_map->end())
 	{
 		p_port_vid_map->erase(port);
@@ -51,9 +52,10 @@ VlanController::GetVlanId (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, c
 	if (mm_iterator != this->vid_map.end())
 	{
 		boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
-		if (p_port_vid_map->find(port) != p_port_vid_map->end())
+		PortVidMap::iterator itr = p_port_vid_map->find(port);
+		if (itr != p_port_vid_map->end())
 		{
-			vid = (p_port_vid_map->at(port));
+			vid = itr->second;
 	}
 		else
 		{	
@@ -194,7 +196,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				x[0].len = htons (sizeof(ofp_action_output));
 				x[0].port = out_port;
 				// Create a new flow
-				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, vlan_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : vlan_expirationTime.GetSeconds ());
 				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 			}
 			else
@@ -211,7 +213,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 					x[i].port = v[i];
 				}
 				// Create a new flow
-				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, vlan_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : vlan_expirationTime.GetSeconds ());
 				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 			}
 		}
@@ -229,7 +231,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				x[i].port = v[i];
 			}
 			// Create a new flow
-			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, vlan_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : vlan_expirationTime.GetSeconds ());
 			ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 		}
 
@@ -255,7 +257,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			src_addr.CopyTo (key.flow.dl_dst);
 			dst_addr.CopyTo (key.flow.dl_src);
 			key.flow.in_port = out_port;
-			ofp_flow_mod* ofm2 = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_MODIFY, x2, sizeof(x2), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+			ofp_flow_mod* ofm2 = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_MODIFY, x2, sizeof(x2), OFP_FLOW_PERMANENT, vlan_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : vlan_expirationTime.GetSeconds ());
 			SendToSwitch (swtch, ofm2, ofm2->header.length);
 		}
 	}
