@@ -122,7 +122,7 @@ VlanController::EnumeratePortsWithoutInport (const ns3::Ptr<ns3::OpenFlowSwitchN
 			}
 			else
 			{
-				NS_LOG_INFO ("Not Found:1");
+				NS_LOG_INFO ("Not Found: This switch(" << swtch << ") does not have VID(" << vid << ")");
 			}
 		}
 		
