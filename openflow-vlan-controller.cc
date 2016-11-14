@@ -193,6 +193,9 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				x[0].type = htons (OFPAT_OUTPUT);
 				x[0].len = htons (sizeof(ofp_action_output));
 				x[0].port = out_port;
+				// Create a new flow
+				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 			}
 			else
 			{
@@ -200,13 +203,16 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 
 				// Create output-to-port action 
 				ofp_action_output x[(int)v.size()];
-	
+
 				for (int i = 0; i < (int)v.size(); i++)
 				{
 					x[i].type = htons (OFPAT_OUTPUT);
 					x[i].len = htons (sizeof(ofp_action_output));
 					x[i].port = v[i];
 				}
+				// Create a new flow
+				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 			}
 		}
 		else
@@ -222,11 +228,11 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				x[i].len = htons (sizeof(ofp_action_output));
 				x[i].port = v[i];
 			}
+			// Create a new flow
+			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+			ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 		}
 
-		// Create a new flow
-		ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
-		ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 
 		// We can learn a specific port for the source address for future use.
 		ns3::Mac48Address src_addr;
@@ -249,7 +255,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			src_addr.CopyTo (key.flow.dl_dst);
 			dst_addr.CopyTo (key.flow.dl_src);
 			key.flow.in_port = out_port;
-			ofp_flow_mod* ofm2 = BuildFlow (key, -1, OFPFC_MODIFY, x2, sizeof(x2), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+			ofp_flow_mod* ofm2 = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_MODIFY, x2, sizeof(x2), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
 			SendToSwitch (swtch, ofm2, ofm2->header.length);
 		}
 	}

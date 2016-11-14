@@ -16,8 +16,6 @@
 
 #include "openflow-vlan-controller.h"
 
-//using namespace ns3;
-
 NS_LOG_COMPONENT_DEFINE ("VlanControllerTest");
 
 bool verbose = false;
@@ -172,7 +170,4 @@ main (int argc, char *argv[])
 	ns3::Simulator::Run ();
 	ns3::Simulator::Destroy ();
 	NS_LOG_INFO ("Done.");
-//	#else
-//	NS_LOG_INFO ("NS-3 OpenFlow is not enabled. Cannnot run simulation.");
-//	#endif // NS3_OPENFLOW_VLAN_EXAMPLE
 }
