@@ -35,7 +35,7 @@ private:
 	PortVidMap p_port_vid_map;
 
 protected:
-	ns3::Time vlan_expirationTime;
+	ns3::Time m_terminationTime;
 };
 
 #endif /* OPENFLOW_VLAN_CONTROLLER_H */

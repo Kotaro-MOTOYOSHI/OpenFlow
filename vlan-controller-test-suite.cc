@@ -95,7 +95,7 @@ main (int argc, char *argv[])
 		ns3::Ptr<VlanController> controller = ns3::CreateObject<VlanController> ();
 		if (!timeout.IsZero ())
 		{
-			controller->SetAttribute ("ExpirationTime", ns3::TimeValue (timeout));
+			controller->SetAttribute ("TerminationTime", ns3::TimeValue (timeout));
 		}
 		swtch.Install (switchNode, switchDevices, controller);
 	}
