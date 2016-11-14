@@ -1,6 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 
 #include "openflow-vlan-controller.h"
+#include "ns3/openflow-switch-net-device.h"
 #include "ns3/assert.h"
 
 NS_LOG_COMPONENT_DEFINE ("VlanController");
