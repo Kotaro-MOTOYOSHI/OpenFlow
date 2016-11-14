@@ -215,7 +215,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			else
 			{
 				NS_LOG_INFO ("Setting Multicast : Don't know yet what port " << dst_addr << " is connected to");
-
+				
 				// Create output-to-port action 
 				ofp_action_output x[(int)v.size()];
 
@@ -224,10 +224,6 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 					x[i].type = htons (OFPAT_OUTPUT);
 					x[i].len = htons (sizeof(ofp_action_output));
 					x[i].port = v[i];
-					
-//					if (GetVlanId (swtch, v[i]) == 0)
-//					{
-						
 				}
 				// Create a new flow
 				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, x, sizeof(x), OFP_FLOW_PERMANENT, vlan_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : vlan_expirationTime.GetSeconds ());
