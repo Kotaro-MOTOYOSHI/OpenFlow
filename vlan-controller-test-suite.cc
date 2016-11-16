@@ -133,8 +133,8 @@ main (int argc, char *argv[])
 
 	// Create ana optional packet sink to receive these packets
 	ns3::PacketSinkHelper  sink ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
-	app = sink.Install (terminals.Get (1));
-	app.Start (ns3::Seconds (0.0));
+	ns3::ApplicationContainer app2 = sink.Install (terminals.Get (1));
+	app2.Start (ns3::Seconds (0.0));
 
 	//
 	// Create a similar flow from n3 to n2, starting at time 1.1 seconds
@@ -142,14 +142,14 @@ main (int argc, char *argv[])
 	ns3::OnOffHelper onoff2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.1"), port)));
 	onoff2.SetConstantRate (ns3::DataRate ("500kb/s"));
 
-	ns3::ApplicationContainer app2 = onoff2.Install (terminals.Get (2));
-	app2.Start (ns3::Seconds (1.1));
-	app2.Stop (ns3::Seconds (10.0));
+	ns3::ApplicationContainer app3 = onoff2.Install (terminals.Get (2));
+	app3.Start (ns3::Seconds (1.1));
+	app3.Stop (ns3::Seconds (10.0));
 
 	// Create ana optional packet sink to receive these packets
 	ns3::PacketSinkHelper  sink2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
-	app = sink2.Install (terminals.Get (3));
-	app.Start (ns3::Seconds (0.0));
+	ns3::ApplicationContainer app4 = sink2.Install (terminals.Get (3));
+	app4.Start (ns3::Seconds (0.0));
 
 	NS_LOG_INFO ("Configure Tracing.");
 
