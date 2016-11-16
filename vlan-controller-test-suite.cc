@@ -139,7 +139,7 @@ main (int argc, char *argv[])
 	//
 	// Create a similar flow from n3 to n2, starting at time 1.1 seconds
 	//
-	ns3::OnOffHelper onoff2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.1"), port)));
+	ns3::OnOffHelper onoff2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.4"), port)));
 	onoff2.SetConstantRate (ns3::DataRate ("500kb/s"));
 
 	ns3::ApplicationContainer app3 = onoff2.Install (terminals.Get (2));
