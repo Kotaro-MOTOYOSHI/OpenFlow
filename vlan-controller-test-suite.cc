@@ -132,7 +132,7 @@ main (int argc, char *argv[])
 	app.Stop (ns3::Seconds (10.0));
 
 	// Create ana optional packet sink to receive these packets
-	ns3::PacketSinkHelper  sink ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
+	ns3::PacketSinkHelper sink ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
 	ns3::ApplicationContainer app2 = sink.Install (terminals.Get (1));
 	app2.Start (ns3::Seconds (0.0));
 
@@ -147,7 +147,7 @@ main (int argc, char *argv[])
 	app3.Stop (ns3::Seconds (10.0));
 
 	// Create ana optional packet sink to receive these packets
-	ns3::PacketSinkHelper  sink2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
+	ns3::PacketSinkHelper sink2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
 	ns3::ApplicationContainer app4 = sink2.Install (terminals.Get (3));
 	app4.Start (ns3::Seconds (0.0));
 
