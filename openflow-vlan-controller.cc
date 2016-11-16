@@ -5,7 +5,7 @@
 #include "ns3/assert.h"
 
 NS_LOG_COMPONENT_DEFINE ("VlanController");
-NS_OBJECT_ENSURE_REGISTERED(VlanController);
+NS_OBJECT_ENSURE_REGISTERED (VlanController);
 
 ns3::TypeId VlanController::GetTypeId (void)
 {
@@ -30,34 +30,34 @@ ns3::TypeId VlanController::GetInstanceTypeId () const
 void
 VlanController::SetVlanId (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid)
 {
-	Vid_map_t::iterator mm_iterator = vid_map.find(swtch);
-	if(mm_iterator == vid_map.end())
+	Vid_map_t::iterator mm_iterator = vid_map.find (swtch);
+	if (mm_iterator == vid_map.end ())
 	{
-		vid_map.insert(std::make_pair(swtch, boost::shared_ptr<PortVidMap>(new PortVidMap())));	
-		mm_iterator = vid_map.find(swtch);
+		vid_map.insert (std::make_pair (swtch, boost::shared_ptr<PortVidMap> (new PortVidMap ())));	
+		mm_iterator = vid_map.find (swtch);
 	} 
-	assert(mm_iterator != vid_map.end());
+	assert (mm_iterator != vid_map.end ());
 	boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
-	if(p_port_vid_map->find(port) != p_port_vid_map->end())
+	if (p_port_vid_map->find (port) != p_port_vid_map->end ())
 	{
-		p_port_vid_map->erase(port);
+		p_port_vid_map->erase (port);
 	}
-	p_port_vid_map->insert(std::make_pair(port,vid));
+	p_port_vid_map->insert (std::make_pair (port,vid));
 }
 
 uint16_t
 VlanController::GetVlanId (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port)
 {
 	uint16_t vid;
-	Vid_map_t::iterator mm_iterator = vid_map.find(swtch);
-	if (mm_iterator != this->vid_map.end())
+	Vid_map_t::iterator mm_iterator = vid_map.find (swtch);
+	if (mm_iterator != this->vid_map.end ())
 	{
 		boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
-		PortVidMap::iterator itr = p_port_vid_map->find(port);
-		if (itr != p_port_vid_map->end())
+		PortVidMap::iterator itr = p_port_vid_map->find (port);
+		if (itr != p_port_vid_map->end ())
 		{
 			vid = itr->second;
-	}
+		}
 		else
 		{	
 			NS_LOG_ERROR("Not Found VLAN ID : switch = " << swtch << ", port = " << port << ".");
@@ -74,11 +74,11 @@ std::vector<int>
 VlanController::EnumeratePorts (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const uint16_t vid)
 {
 	std::vector<int> v;
-	Vid_map_t::iterator mm_iterator = vid_map.find(swtch);
-	if (mm_iterator != this->vid_map.end())
+	Vid_map_t::iterator mm_iterator = vid_map.find (swtch);
+	if (mm_iterator != this->vid_map.end ())
 	{
 		boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
-		for (PortVidMap::iterator itr = p_port_vid_map->begin(); itr != p_port_vid_map->end(); ++itr)
+		for (PortVidMap::iterator itr = p_port_vid_map->begin (); itr != p_port_vid_map->end (); ++itr)
 		{
 			if (itr->second == vid)
 			{
@@ -89,7 +89,6 @@ VlanController::EnumeratePorts (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swt
 				NS_LOG_INFO ("Not Found : This switch(" << swtch << ") does not have VID(" << vid << ")");
 			}
 		}
-		
 	}
 	else
 	{
@@ -102,26 +101,21 @@ std::vector<int>
 VlanController::EnumeratePortsWithoutInport (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid)
 {
 	std::vector<int> v;
-	Vid_map_t::iterator mm_iterator = vid_map.find(swtch);
-	if (mm_iterator != this->vid_map.end())
+	Vid_map_t::iterator mm_iterator = vid_map.find (swtch);
+	if (mm_iterator != this->vid_map.end ())
 	{
 		boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
-		for (PortVidMap::iterator itr = p_port_vid_map->begin(); itr != p_port_vid_map->end(); ++itr)
+		for (PortVidMap::iterator itr = p_port_vid_map->begin (); itr != p_port_vid_map->end (); ++itr)
 		{
 			if (itr->second == vid)
 			{
-				if (itr->first == port)
-				{
-					NS_LOG_INFO ("port and itr->first = same");
-				}
-				else
+				if (itr->first != port)
 				{
 					v.push_back(itr->first);
 				}
 
 			}
 		}
-		
 	}
 	else
 	{
@@ -167,7 +161,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			ofp_action_vlan_vid v[1];
 
 			v[0].type = htons (OFPAT_SET_VLAN_VID);
-			v[0].len = htons (sizeof(ofp_action_vlan_vid)*2);
+			v[0].len = htons (sizeof(ofp_action_vlan_vid) * 2);
 			v[0].vlan_vid = vid;
 
 			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, v, sizeof(v), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
@@ -208,7 +202,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
 				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 
-				if (GetVlanId(swtch, out_port) == 0)
+				if (GetVlanId (swtch, out_port) == 0)
 				{
 					ofp_action_header v[1];
 					
@@ -224,7 +218,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				NS_LOG_INFO ("Setting Multicast : Don't know yet what port " << dst_addr << " is connected to");
 				
 				// Create output-to-port and vlan-strip(if destination not correspond) action
-				for (int i = 0; i < (int)v.size(); i++)
+				for (int i = 0; i < v.size(); i++)
 				{
 					// output
 					ofp_action_output x[1];
@@ -255,7 +249,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			NS_LOG_INFO ("Setting Multicast : this packet is a broadcast");
 
 			// Create output-to-port and vlan strip(if destination not correspond) action
-			for (int i = 0; i < (int)v.size(); i++)
+			for (int i = 0; i < v.size(); i++)
 			{
 				// output
 				ofp_action_output x[1];
