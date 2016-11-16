@@ -76,7 +76,7 @@ main (int argc, char *argv[])
 	ns3::CsmaHelper csma;
 	csma.SetChannelAttribute ("DataRate", ns3::DataRateValue (5000000));
 	csma.SetChannelAttribute ("Delay", ns3::TimeValue (ns3::MilliSeconds (2)));
-
+	
 	// Create the csma links, from each terminal to the switch.
 	ns3::NetDeviceContainer terminalDevices;
 	ns3::NetDeviceContainer switchDevices;

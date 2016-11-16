@@ -246,8 +246,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 		}
 		else
 		{
-			NS_LOG_INFO ("Setting Multicast : this packet is a broadcast");
-
+			NS_LOG_INFO ("Setting Multicast : this packet is a broadcast packet");
 			// Create output-to-port and vlan strip(if destination not correspond) action
 			for (int i = 0; i < (int)v.size(); i++)
 			{
