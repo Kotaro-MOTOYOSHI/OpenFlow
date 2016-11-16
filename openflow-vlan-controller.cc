@@ -218,7 +218,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				NS_LOG_INFO ("Setting Multicast : Don't know yet what port " << dst_addr << " is connected to");
 				
 				// Create output-to-port and vlan-strip(if destination not correspond) action
-				for (int i = 0; i < v.size(); i++)
+				for (int i = 0; i < (int)v.size(); i++)
 				{
 					// output
 					ofp_action_output x[1];
@@ -249,7 +249,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			NS_LOG_INFO ("Setting Multicast : this packet is a broadcast");
 
 			// Create output-to-port and vlan strip(if destination not correspond) action
-			for (int i = 0; i < v.size(); i++)
+			for (int i = 0; i < (int)v.size(); i++)
 			{
 				// output
 				ofp_action_output x[1];
