@@ -144,7 +144,9 @@ main (int argc, char *argv[])
 	app.Start (ns3::Seconds (1.1));
 	app.Stop (ns3::Seconds (10.0));
 
-	app = sink.Install (terminals.Get (2));
+	// Create ana optional packet sink to receive these packets
+	ns3::PacketSinkHelper  sink2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
+	app = sink2.Install (terminals.Get (2));
 	app.Start (ns3::Seconds (0.0));
 
 	NS_LOG_INFO ("Configure Tracing.");

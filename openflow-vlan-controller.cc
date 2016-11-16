@@ -120,10 +120,10 @@ VlanController::EnumeratePortsWithoutInport (const ns3::Ptr<ns3::OpenFlowSwitchN
 				}
 
 			}
-			else
-			{
-				NS_LOG_INFO ("Not Found : This switch(" << swtch << ") does not have VID(" << vid << ")");
-			}
+//			else
+//			{
+//				NS_LOG_INFO ("Not Found : This switch(" << swtch << ") does not have VID(" << vid << ")");
+//			}
 		}
 		
 	}
@@ -137,6 +137,14 @@ VlanController::EnumeratePortsWithoutInport (const ns3::Ptr<ns3::OpenFlowSwitchN
 void
 VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer)
 {
+	#ifndef SET_VLAN_ID
+	#define SET_VLAN_ID
+	SetVlanId(swtch, 0, 1);
+	SetVlanId(swtch, 1, 1);
+	SetVlanId(swtch, 2, 2);
+	SetVlanId(swtch, 3, 2);
+	#endif // SET_VLAN_ID
+
 	if (m_switches.find (swtch) == m_switches.end ())
 	{
 		NS_LOG_ERROR ("Can't receive from this switch, not registered to the Controller.");
@@ -154,17 +162,16 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 		sw_flow_key key;
 		key.wildcards = 0;
 		flow_extract (buffer, port != -1 ? port : OFPP_NONE, &key.flow);
-
 		uint16_t vid = key.flow.dl_vlan;
 
 		// Set VLAN ID, if buffer do not have VLAN ID
 		if (vid == OFP_VLAN_NONE)
 		{
-			vid = GetVlanId (swtch, port);
-			
+			vid = GetVlanId (swtch, port);	
 			ofp_action_vlan_vid v[1];
+
 			v[0].type = htons (OFPAT_SET_VLAN_VID);
-			v[0].len = htons (sizeof(ofp_action_vlan_vid));
+			v[0].len = htons (sizeof(ofp_action_vlan_vid)*2);
 			v[0].vlan_vid = vid;
 
 			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, v, sizeof(v), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
@@ -196,56 +203,87 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				
 				// Create output-to-port action if already learned
 				ofp_action_output x[1];
+				
 				x[0].type = htons (OFPAT_OUTPUT);
 				x[0].len = htons (sizeof(ofp_action_output));
 				x[0].port = out_port;
+
+				// Create a new flow
+				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
+				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
+
 				if (GetVlanId(swtch, out_port) == 0)
 				{
-					ofp_action_output v[1];
+					ofp_action_header v[1];
+					
 					v[0].type = htons (OFPAT_STRIP_VLAN);
-					v[0].len = htons (sizeof(ofp_action_output));
+					v[0].len = htons (sizeof(ofp_action_header));
+					
 					ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, v, sizeof(v), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
 					ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 				}
-
-				// Create a new flow
-				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, x, sizeof(x), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
-				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 			}
 			else
 			{
 				NS_LOG_INFO ("Setting Multicast : Don't know yet what port " << dst_addr << " is connected to");
 				
-				// Create output-to-port action 
-				ofp_action_output x[(int)v.size()];
-
+				// Create output-to-port and vlan-strip(if destination not correspond) action
 				for (int i = 0; i < (int)v.size(); i++)
 				{
-					x[i].type = htons (OFPAT_OUTPUT);
-					x[i].len = htons (sizeof(ofp_action_output));
-					x[i].port = v[i];
+					// output
+					ofp_action_output x[1];
+
+					x[0].type = htons (OFPAT_OUTPUT);
+					x[0].len = htons (sizeof(ofp_action_output));
+					x[0].port = v[i];
+
+					ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_terminationTime.IsZero() ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
+					ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
+
+					// strip
+					if (GetVlanId(swtch, v[i]) == 0)
+					{
+						ofp_action_header s[1];
+						
+						s[0].type = htons (OFPAT_STRIP_VLAN);
+						s[0].len = htons (sizeof(ofp_action_header));
+
+						ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, s, sizeof(s), OFP_FLOW_PERMANENT, m_terminationTime.IsZero() ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
+						ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
+					}
 				}
-				// Create a new flow
-				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, x, sizeof(x), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
-				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 			}
 		}
 		else
 		{
 			NS_LOG_INFO ("Setting Multicast : this packet is a broadcast");
 
-			// Create output-to-port action 
-			ofp_action_output x[(int)v.size()];
-
+			// Create output-to-port and vlan strip(if destination not correspond) action
 			for (int i = 0; i < (int)v.size(); i++)
 			{
-				x[i].type = htons (OFPAT_OUTPUT);
-				x[i].len = htons (sizeof(ofp_action_output));
-				x[i].port = v[i];
+				// output
+				ofp_action_output x[1];
+
+				x[0].type = htons (OFPAT_OUTPUT);
+				x[0].len = htons (sizeof(ofp_action_output));
+				x[0].port = v[i];
+
+				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
+				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
+
+				// strip
+				if (GetVlanId(swtch, v[i]) == 0)
+				{
+					ofp_action_header s[1];
+
+					s[0].type = htons (OFPAT_STRIP_VLAN);
+					s[0].len = htons (sizeof(ofp_action_header));
+
+					ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, s, sizeof(s), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
+					ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
+				}
 			}
-			// Create a new flow
-			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, x, sizeof(x), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
-			ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
+				
 		}
 
 
