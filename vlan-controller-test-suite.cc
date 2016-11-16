@@ -59,6 +59,7 @@ main (int argc, char *argv[])
 
 	if (verbose)
 	{
+		ns3::LogComponentEnable ("VlanController", ns3::LOG_LEVEL_INFO);
 		ns3::LogComponentEnable ("VlanControllerTest", ns3::LOG_LEVEL_INFO);
 		ns3::LogComponentEnable ("OpenFlowInterface", ns3::LOG_LEVEL_INFO);
 		ns3::LogComponentEnable ("OpenFlowSwitchNetDevice", ns3::LOG_LEVEL_INFO);
