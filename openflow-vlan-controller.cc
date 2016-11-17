@@ -113,7 +113,6 @@ VlanController::EnumeratePortsWithoutInport (const ns3::Ptr<ns3::OpenFlowSwitchN
 				{
 					v.push_back(itr->first);
 				}
-
 			}
 		}
 	}
@@ -127,14 +126,6 @@ VlanController::EnumeratePortsWithoutInport (const ns3::Ptr<ns3::OpenFlowSwitchN
 void
 VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer)
 {
-	#ifndef SET_VLAN_ID
-	#define SET_VLAN_ID
-	//SetVlanId(swtch, 0, 1);
-	//SetVlanId(swtch, 1, 1);
-	//SetVlanId(swtch, 2, 2);
-	//SetVlanId(swtch, 3, 2);
-	#endif // SET_VLAN_ID
-
 	if (m_switches.find (swtch) == m_switches.end ())
 	{
 		NS_LOG_ERROR ("Can't receive from this switch, not registered to the Controller.");
