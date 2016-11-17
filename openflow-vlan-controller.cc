@@ -60,12 +60,12 @@ VlanController::GetVlanId (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, c
 		}
 		else
 		{	
-			NS_LOG_ERROR("Not Found VLAN ID : switch = " << swtch << ", port = " << port << ".");
+			NS_LOG_ERROR("port not found: switch = " << swtch << ", port = " << port << ".");
 		}
 	}
 	else
 	{
-		NS_LOG_ERROR("Not Found VLAN ID : switch = " << swtch << ", port = " << port << ".");
+		NS_LOG_ERROR("switch not found: switch = " << swtch << ", port = " << port << ".");
 	}
 	return vid;
 }
@@ -86,13 +86,13 @@ VlanController::EnumeratePorts (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swt
 			}
 			else
 			{
-				NS_LOG_INFO ("Not Found : This switch(" << swtch << ") does not have VID(" << vid << ")");
+				NS_LOG_INFO ("port not found: This switch(" << swtch << ") has no port with VID(" << vid << ")");
 			}
 		}
 	}
 	else
 	{
-		NS_LOG_INFO ("Not Found : This switch(" << swtch << ") does not exist");
+		NS_LOG_INFO ("switch not found: This switch(" << swtch << ") does not exist");
 	}
 	return v;
 }
@@ -119,7 +119,7 @@ VlanController::EnumeratePortsWithoutInport (const ns3::Ptr<ns3::OpenFlowSwitchN
 	}
 	else
 	{
-		NS_LOG_INFO ("Not Found : This switch(" << swtch << ") does not exist");
+		NS_LOG_INFO ("switch not found: This switch(" << swtch << ") does not exist");
 	}
 	return v;
 }
@@ -129,10 +129,10 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 {
 	#ifndef SET_VLAN_ID
 	#define SET_VLAN_ID
-	SetVlanId(swtch, 0, 1);
-	SetVlanId(swtch, 1, 1);
-	SetVlanId(swtch, 2, 2);
-	SetVlanId(swtch, 3, 2);
+	//SetVlanId(swtch, 0, 1);
+	//SetVlanId(swtch, 1, 1);
+	//SetVlanId(swtch, 2, 2);
+	//SetVlanId(swtch, 3, 2);
 	#endif // SET_VLAN_ID
 
 	if (m_switches.find (swtch) == m_switches.end ())

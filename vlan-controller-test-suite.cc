@@ -89,16 +89,30 @@ main (int argc, char *argv[])
 
 	// Create the switch netdevice, which will do the packet switching
 	ns3::Ptr<ns3::Node> switchNode = csmaSwitch.Get (0);
-	ns3::OpenFlowSwitchHelper swtch;
 
 	if (vlan)
 	{
+		ns3::OpenFlowSwitchHelper open_flow_switch_helper;
 		ns3::Ptr<VlanController> controller = ns3::CreateObject<VlanController> ();
 		if (!timeout.IsZero ())
 		{
 			controller->SetAttribute ("TerminationTime", ns3::TimeValue (timeout));
 		}
-		swtch.Install (switchNode, switchDevices, controller);
+		open_flow_switch_helper.Install (switchNode, switchDevices, controller);
+
+                ns3::Ptr<ns3::OpenFlowSwitchNetDevice> p_open_flow_switch_net_device;
+                for(unsigned i = 0; i<switchNode->GetNDevices(); ++i) {
+                  ns3::Ptr<ns3::NetDevice> p_net_device = switchNode->GetDevice(i);
+                  NS_LOG_INFO("device type = " << p_net_device->GetInstanceTypeId().GetName());
+                  if(p_net_device->GetInstanceTypeId() == ns3::OpenFlowSwitchNetDevice::GetTypeId()){
+                    p_open_flow_switch_net_device= p_net_device->GetObject<ns3::OpenFlowSwitchNetDevice>();
+                    NS_LOG_INFO("OpenFlowSwitchNetDevice was found. " << p_open_flow_switch_net_device->GetTypeId().GetName());
+                  }
+                }
+                controller->SetVlanId(p_open_flow_switch_net_device, 0, 1);
+                controller->SetVlanId(p_open_flow_switch_net_device, 1, 1);
+                controller->SetVlanId(p_open_flow_switch_net_device, 2, 2);
+                controller->SetVlanId(p_open_flow_switch_net_device, 3, 2);
 	}
 
 	// Set VLAN ID
