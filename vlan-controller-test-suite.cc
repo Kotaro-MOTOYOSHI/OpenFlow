@@ -89,16 +89,16 @@ main (int argc, char *argv[])
 
 	// Create the switch netdevice, which will do the packet switching
 	ns3::Ptr<ns3::Node> switchNode = csmaSwitch.Get (0);
-	ns3::OpenFlowSwitchHelper swtch;
 
 	if (vlan)
 	{
+		ns3::OpenFlowSwitchHelper open_flow_switch_helper;
 		ns3::Ptr<VlanController> controller = ns3::CreateObject<VlanController> ();
 		if (!timeout.IsZero ())
 		{
 			controller->SetAttribute ("TerminationTime", ns3::TimeValue (timeout));
 		}
-		swtch.Install (switchNode, switchDevices, controller);
+		open_flow_switch_helper.Install (switchNode, switchDevices, controller);
 	}
 
 	// Set VLAN ID
