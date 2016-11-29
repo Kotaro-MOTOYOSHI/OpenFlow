@@ -67,7 +67,7 @@ main (int argc, char *argv[])
 
 	NS_LOG_INFO ("Create nodes.");
 	ns3::NodeContainer terminals;
-	terminals.Create (4);
+	terminals.Create (5);
 
 	ns3::NodeContainer csmaSwitch;
 	csmaSwitch.Create (1);
@@ -80,7 +80,7 @@ main (int argc, char *argv[])
 	// Create the csma links, from each terminal to the switch.
 	ns3::NetDeviceContainer terminalDevices;
 	ns3::NetDeviceContainer switchDevices;
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch));
 		terminalDevices.Add (link.Get (0));
@@ -116,6 +116,7 @@ main (int argc, char *argv[])
 		controller->SetVlanId (p_open_flow_switch_net_device, 1, 1);
 		controller->SetVlanId (p_open_flow_switch_net_device, 2, 2);
 		controller->SetVlanId (p_open_flow_switch_net_device, 3, 2);
+		controller->SetVlanId (p_open_flow_switch_net_device, 4, 99);
 	}
 	else
 	{
@@ -169,6 +170,10 @@ main (int argc, char *argv[])
 	ns3::PacketSinkHelper sink2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
 	ns3::ApplicationContainer app4 = sink2.Install (terminals.Get (3));
 	app4.Start (ns3::Seconds (0.0));
+
+	ns3::PacketSinkHelper sink3 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
+	ns3::ApplicationContainer app5 = sink3.Install (terminals.Get (4));
+	app5.Start (ns3::Seconds (0.0));
 
 	NS_LOG_INFO ("Configure Tracing.");
 

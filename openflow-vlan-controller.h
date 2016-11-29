@@ -26,10 +26,11 @@ public:
 
 	std::vector<int> EnumeratePortsWithoutInport (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, const int port, const uint16_t vid);
 
+
 	void ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer);
 
 private:
-	typedef std::map<int, uint16_t> PortVidMap;
+	typedef std::multimap<int, uint16_t> PortVidMap;
 	typedef std::multimap<ns3::Ptr<ns3::OpenFlowSwitchNetDevice>, boost::shared_ptr<PortVidMap> > Vid_map_t;
 
 	Vid_map_t vid_map;
