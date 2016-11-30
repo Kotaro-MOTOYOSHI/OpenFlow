@@ -187,7 +187,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 	
 			vl[0].type = htons (OFPAT_SET_VLAN_VID);
 			vl[0].len = htons (sizeof(ofp_action_vlan_vid) * 2);
-			vl[0].vlan_vid = 99;
+			vl[0].vlan_vid = (uint16_t) 99;
 
 			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, vl, sizeof(vl), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
 			ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
