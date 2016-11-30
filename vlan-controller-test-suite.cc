@@ -116,7 +116,7 @@ main (int argc, char *argv[])
 		controller->SetVlanId (p_open_flow_switch_net_device, 1, 1);
 		controller->SetVlanId (p_open_flow_switch_net_device, 2, 2);
 		controller->SetVlanId (p_open_flow_switch_net_device, 3, 2);
-		controller->SetVlanId (p_open_flow_switch_net_device, 4, 99);
+		controller->SetVlanId (p_open_flow_switch_net_device, 4, 99); // DPI
 	}
 	else
 	{
