@@ -174,7 +174,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 
 		uint16_t out_port;
 		uint16_t in_port = ntohs (key.flow.in_port);
-#if 0
+#if 0		
 		// Send To Dpi (未完成)
 		if (!dst_addr.IsBroadcast ()) // 条件は後日
 		{
@@ -189,7 +189,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			vl[0].len = htons (sizeof(ofp_action_vlan_vid) * 2);
 			vl[0].vlan_vid = (uint16_t) 99;
 
-			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, vl, sizeof(vl), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
+			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY_STRICT, vl, sizeof(vl), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
 			ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 
 			// Destination IPv4 Address Re-Set
@@ -231,7 +231,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			ofp_flow_mod* ofm4 = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
 			ns3::ofi::Controller::SendToSwitch (swtch, ofm4, ofm4->header.length);
 		}
-#endif
+#endif		
 		if (!dst_addr.IsBroadcast ())
 		{
 			LearnState_t::iterator st = m_learnState.find (dst_addr);
@@ -266,19 +266,23 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				NS_LOG_INFO ("Setting Multicast : Don't know yet what port " << dst_addr << " is connected to");
 				
 				// Create output-to-port and vlan-strip(if destination not correspond) action
+				
+				// output
+				ofp_action_output x[v.size()];
 				for (int i = 0; i < (int)v.size(); i++)
 				{
-					// output
-					ofp_action_output x[1];
+					x[i].type = htons (OFPAT_OUTPUT);
+					x[i].len = htons (sizeof(ofp_action_output));
+					x[i].port = v[i];
+				}
 
-					x[0].type = htons (OFPAT_OUTPUT);
-					x[0].len = htons (sizeof(ofp_action_output));
-					x[0].port = v[i];
+				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_terminationTime.IsZero() ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
 
-					ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_terminationTime.IsZero() ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
-					ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
+				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 
-					// strip
+				// strip
+				for (int i = 0; i < (int)v.size(); i++)
+				{
 					if (GetVlanId(swtch, v[i]) == 0)
 					{
 						ofp_action_header s[1];
@@ -296,19 +300,22 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 		{
 			NS_LOG_INFO ("Setting Multicast : this packet is a broadcast packet");
 			// Create output-to-port and vlan strip(if destination not correspond) action
+			
+			// output
+			ofp_action_output x[v.size()];
 			for (int i = 0; i < (int)v.size(); i++)
 			{
-				// output
-				ofp_action_output x[1];
+				x[i].type = htons (OFPAT_OUTPUT);
+				x[i].len = htons (sizeof(ofp_action_output));
+				x[i].port = v[i];
+			}
 
-				x[0].type = htons (OFPAT_OUTPUT);
-				x[0].len = htons (sizeof(ofp_action_output));
-				x[0].port = v[i];
+			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
+			ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 
-				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
-				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
-
-				// strip
+			// strip
+			for (int i = 0; i < (int)v.size(); i++) 
+			{
 				if (GetVlanId(swtch, v[i]) == 0)
 				{
 					ofp_action_header s[1];
@@ -345,7 +352,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			dst_addr.CopyTo (key.flow.dl_src);
 			key.flow.in_port = out_port;
 			ofp_flow_mod* ofm2 = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_MODIFY, x2, sizeof(x2), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
-			SendToSwitch (swtch, ofm2, ofm2->header.length);
+			ns3::ofi::Controller::SendToSwitch (swtch, ofm2, ofm2->header.length);
 		}
 	}
 }
