@@ -15,6 +15,7 @@
 #include "ns3/log.h"
 
 #include "openflow-vlan-controller.h"
+#include "openflow-mirroring.h"
 
 NS_LOG_COMPONENT_DEFINE ("VlanControllerTest");
 
