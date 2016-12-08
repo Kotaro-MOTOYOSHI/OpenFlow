@@ -124,6 +124,73 @@ VlanController::EnumeratePortsWithoutInport (const ns3::Ptr<ns3::OpenFlowSwitchN
 }
 
 void
+VlanController::MirroringToIds (sw_flow_key key, ofp_packet_in* opi, ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer)
+{
+	ns3::Mac48Address dst_addr;
+	dst_addr.CopyFrom (key.flow.dl_dst);
+	int port = htons (opi->in_port);
+
+	if (!dst_addr.IsBroadcast ()) // 条件は未定
+	{
+		// IDS -> VID = 4095
+		NS_LOG_INFO ("Send To IDS (buffer_id = " << opi->buffer_id << ")");
+
+		// VLAN ID Re-Set
+		ofp_action_vlan_vid vl[1];
+
+		vl[0].type = htons (OFPAT_SET_VLAN_VID);
+		vl[0].len = htons (sizeof(ofp_action_vlan_vid) * 2);
+		vl[0].vlan_vid = htons ((uint16_t) 4095);
+
+		// Destination IPv4 Address Re-Set
+		ofp_action_nw_addr nw[1];
+
+		nw[0].type = htons (OFPAT_SET_NW_DST);
+		nw[0].len = htons (sizeof(ofp_action_nw_addr));
+		uint32_t nw_ad = 0x0a010105;
+		nw[0].nw_addr = htons (nw_ad); // 10.1.1.5
+
+		// Destination MAC Address Re-Set
+		ofp_action_dl_addr dl[1];
+
+		dl[0].type = htons (OFPAT_SET_DL_DST);
+		dl[0].len = htons (sizeof(ofp_action_dl_addr));
+
+		// MAC Address -> 00:00:00:00:00:09
+		for (int i = 0; i < 5; i++)
+		{
+			dl[0].dl_addr[i] = 0x00;
+		}
+		dl[0].dl_addr[5] = 0x09;
+
+		// output
+		std::vector<int> s = VlanController::EnumeratePortsWithoutInport (swtch, port, 4095);
+		assert (s.size () == 1);
+
+		ofp_action_output x[1];
+
+		x[0].type = htons (OFPAT_OUTPUT);
+		x[0].len = htons (sizeof(ofp_action_output));
+		x[0].port = s[0];
+
+		// Flow-entry (1 flow in 4 acts)
+		size_t vl_offset = 0;
+		size_t nw_offset = vl_offset + sizeof(vl) * 2;
+		size_t dl_offset = nw_offset + sizeof(nw);
+		size_t x_offset = dl_offset + sizeof(dl);
+
+		unsigned char acts[sizeof(vl) * 2 + sizeof(nw) + sizeof(dl) + sizeof(x)];
+		memcpy(acts + vl_offset, vl, sizeof(vl) * 2);
+		memcpy(acts + nw_offset, nw, sizeof(nw));
+		memcpy(acts + dl_offset, dl, sizeof(dl));
+		memcpy(acts + x_offset, x, sizeof(x));
+
+		ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, acts, sizeof(acts), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
+		ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
+	}
+}
+
+void
 VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer)
 {
 	if (m_switches.find (swtch) == m_switches.end ())
@@ -269,9 +336,11 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 					ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, s, sizeof(s), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
 					ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 				}
-			}	
+			}
 		}
-
+		
+		// Send To IDS
+		VlanController::MirroringToIds (key, opi, swtch, buffer);
 
 		// We can learn a specific port for the source address for future use.
 		ns3::Mac48Address src_addr;

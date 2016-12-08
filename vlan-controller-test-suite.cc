@@ -15,7 +15,6 @@
 #include "ns3/log.h"
 
 #include "openflow-vlan-controller.h"
-#include "openflow-mirroring.h"
 
 NS_LOG_COMPONENT_DEFINE ("VlanControllerTest");
 
@@ -117,7 +116,7 @@ main (int argc, char *argv[])
 		controller->SetVlanId (p_open_flow_switch_net_device, 1, 1);
 		controller->SetVlanId (p_open_flow_switch_net_device, 2, 2);
 		controller->SetVlanId (p_open_flow_switch_net_device, 3, 2);
-		controller->SetVlanId (p_open_flow_switch_net_device, 4, 99); // DPI
+		controller->SetVlanId (p_open_flow_switch_net_device, 4, 4095); // DPI
 	}
 	else
 	{
