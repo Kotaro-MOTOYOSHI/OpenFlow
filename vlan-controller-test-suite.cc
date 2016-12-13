@@ -79,28 +79,30 @@ main (int argc, char *argv[])
 	
 	// Create the csma links, from each terminal to the switch.
 	ns3::NetDeviceContainer terminalDevices;
-	ns3::NetDeviceContainer switchDevices;
+	ns3::NetDeviceContainer switchDevices[2];
 	for (int i = 0; i < 4; i++)
 	{
 		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (0)));
 		terminalDevices.Add (link.Get (0));
-		switchDevices.Add (link.Get (1));
+		switchDevices[0].Add (link.Get (1));
 	}
 	
 	for (int i = 4; i < 7; i++)
 	{
 		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (1)));
 		terminalDevices.Add (link.Get (0));
-		switchDevices.Add (link.Get (1));
+		switchDevices[1].Add (link.Get (1));
 	}
 
-	ns3::NetDeviceContainer link2 = csma.Install (ns3::NodeContainer (csmaSwitch.Get (0), csmaSwitch.Get(1)));
-	switchDevices.Add (link2.Get (0));
+	ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (csmaSwitch.Get (0), csmaSwitch.Get(1)));
+	switchDevices[0].Add (link.Get (0));
+	switchDevices[1].Add (link.Get (1));
 
 	// Create the switch netdevice, which will do the packet switching
-	ns3::Ptr<ns3::Node> switchNode = csmaSwitch.Get (0);
-	switchNode.AddDevice (csmaSwitch.Get (1));
 	ns3::OpenFlowSwitchHelper open_flow_switch_helper;
+	ns3::Ptr <ns3::Node> switchNode[2];
+	switchNode[0] = csmaSwitch.Get (0);
+	switchNode[1] = csmaSwitch.Get (1);
 
 	if (vlan)
 	{
@@ -109,12 +111,13 @@ main (int argc, char *argv[])
 		{
 			controller->SetAttribute ("TerminationTime", ns3::TimeValue (timeout));
 		}
-		open_flow_switch_helper.Install (switchNode, switchDevices, controller);
+		open_flow_switch_helper.Install (switchNode[0], switchDevices[0], controller);
+		open_flow_switch_helper.Install (switchNode[1], switchDevices[1], controller);
 		ns3::Ptr<ns3::OpenFlowSwitchNetDevice> p_open_flow_switch_net_device;
 		
-		for (unsigned i = 0; i < switchNode->GetNDevices (); ++i)
+		for (unsigned i = 0; i < csmaSwitch.GetN (); ++i)
 		{
-			ns3::Ptr<ns3::NetDevice> p_net_device = switchNode->GetDevice (i);
+			ns3::Ptr<ns3::NetDevice> p_net_device = switchNode[i]->GetDevice (0);
 			NS_LOG_INFO("device type = " << p_net_device->GetInstanceTypeId ().GetName ());
 			
 			if (p_net_device->GetInstanceTypeId () == ns3::OpenFlowSwitchNetDevice::GetTypeId ())
@@ -136,7 +139,8 @@ main (int argc, char *argv[])
 		{
 			controller->SetAttribute ("ExpirationTime", ns3::TimeValue (timeout));
 		}
-		open_flow_switch_helper.Install (switchNode, switchDevices, controller);
+		open_flow_switch_helper.Install (switchNode[0], switchDevices[0], controller);
+		open_flow_switch_helper.Install (switchNode[1], switchDevices[1], controller);
 	}
 
 	// Add internet stack to the terminals
@@ -152,7 +156,7 @@ main (int argc, char *argv[])
 	// Create an On-Off application to send UDP datagrams from n0 to n1.
 	NS_LOG_INFO ("Create Applications.");
 	uint16_t port = 9; // Discard port
-
+	
 	ns3::OnOffHelper onoff ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.2"), port)));
 	onoff.SetConstantRate (ns3::DataRate ("500kb/s"));
 
@@ -164,27 +168,22 @@ main (int argc, char *argv[])
 
 	// Create ana optional packet sink to receive these packets
 	ns3::PacketSinkHelper sink ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
-	ns3::ApplicationContainer app2 = sink.Install (terminals.Get (1));
-	app2.Start (ns3::Seconds (0.0));
+	app = sink.Install (terminals.Get (1));
+	app.Start (ns3::Seconds (0.0));
 
 	//
 	// Create a similar flow from n3 to n2, starting at time 1.1 seconds
 	//
-	ns3::OnOffHelper onoff2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.7"), port)));
+	ns3::OnOffHelper onoff2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.4"), port)));
 	onoff2.SetConstantRate (ns3::DataRate ("500kb/s"));
 
-	ns3::ApplicationContainer app3 = onoff2.Install (terminals.Get (2));
-	app3.Start (ns3::Seconds (1.1));
-	app3.Stop (ns3::Seconds (10.0));
+	app = onoff2.Install (terminals.Get (2));
+	app.Start (ns3::Seconds (1.1));
+	app.Stop (ns3::Seconds (10.0));
 
 	// Create ana optional packet sink to receive these packets
-	ns3::PacketSinkHelper sink2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
-	ns3::ApplicationContainer app4 = sink2.Install (terminals.Get (3));
-	app4.Start (ns3::Seconds (0.0));
-
-	ns3::PacketSinkHelper sink3 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
-	ns3::ApplicationContainer app5 = sink3.Install (terminals.Get (4));
-	app5.Start (ns3::Seconds (0.0));
+	app = sink.Install (terminals.Get (3));
+	app.Start (ns3::Seconds (0.0));
 
 	NS_LOG_INFO ("Configure Tracing.");
 
