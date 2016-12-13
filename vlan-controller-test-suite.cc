@@ -67,10 +67,10 @@ main (int argc, char *argv[])
 
 	NS_LOG_INFO ("Create nodes.");
 	ns3::NodeContainer terminals;
-	terminals.Create (5);
+	terminals.Create (7);
 
 	ns3::NodeContainer csmaSwitch;
-	csmaSwitch.Create (1);
+	csmaSwitch.Create (2);
 
 	NS_LOG_INFO ("Build Topology.");
 	ns3::CsmaHelper csma;
@@ -80,15 +80,26 @@ main (int argc, char *argv[])
 	// Create the csma links, from each terminal to the switch.
 	ns3::NetDeviceContainer terminalDevices;
 	ns3::NetDeviceContainer switchDevices;
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch));
+		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (0)));
+		terminalDevices.Add (link.Get (0));
+		switchDevices.Add (link.Get (1));
+	}
+	
+	for (int i = 4; i < 7; i++)
+	{
+		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (1)));
 		terminalDevices.Add (link.Get (0));
 		switchDevices.Add (link.Get (1));
 	}
 
+	ns3::NetDeviceContainer link2 = csma.Install (ns3::NodeContainer (csmaSwitch.Get (0), csmaSwitch.Get(1)));
+	switchDevices.Add (link2.Get (0));
+
 	// Create the switch netdevice, which will do the packet switching
 	ns3::Ptr<ns3::Node> switchNode = csmaSwitch.Get (0);
+	switchNode.AddDevice (csmaSwitch.Get (1));
 	ns3::OpenFlowSwitchHelper open_flow_switch_helper;
 
 	if (vlan)
@@ -159,7 +170,7 @@ main (int argc, char *argv[])
 	//
 	// Create a similar flow from n3 to n2, starting at time 1.1 seconds
 	//
-	ns3::OnOffHelper onoff2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.4"), port)));
+	ns3::OnOffHelper onoff2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.7"), port)));
 	onoff2.SetConstantRate (ns3::DataRate ("500kb/s"));
 
 	ns3::ApplicationContainer app3 = onoff2.Install (terminals.Get (2));
