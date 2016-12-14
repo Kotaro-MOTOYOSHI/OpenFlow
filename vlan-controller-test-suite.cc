@@ -53,7 +53,7 @@ main (int argc, char *argv[])
 	ns3::CommandLine cmd;
 	cmd.AddValue ("verbose", "Verbose (turns on logging).", ns3::MakeCallback (&SetVerbose));
 	cmd.AddValue ("vlan", "Enable VLAN Mode", ns3::MakeCallback (&SetVlan));
-	cmd.AddValue ("timeout", "Learning Controller Timeout", ns3::MakeCallback (&SetTimeout));
+	cmd.AddValue ("timeout", "Learning4 Controller Timeout", ns3::MakeCallback (&SetTimeout));
 
 	cmd.Parse (argc, argv);
 
@@ -67,7 +67,7 @@ main (int argc, char *argv[])
 
 	NS_LOG_INFO ("Create nodes.");
 	ns3::NodeContainer terminals;
-	terminals.Create (7);
+	terminals.Create (8);
 
 	ns3::NodeContainer csmaSwitch;
 	csmaSwitch.Create (2);
@@ -80,14 +80,14 @@ main (int argc, char *argv[])
 	// Create the csma links, from each terminal to the switch.
 	ns3::NetDeviceContainer terminalDevices;
 	ns3::NetDeviceContainer switchDevices[2];
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (0)));
 		terminalDevices.Add (link.Get (0));
 		switchDevices[0].Add (link.Get (1));
 	}
 	
-	for (int i = 4; i < 7; i++)
+	for (int i = 5; i < 8; i++)
 	{
 		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (1)));
 		terminalDevices.Add (link.Get (0));
@@ -113,24 +113,29 @@ main (int argc, char *argv[])
 		}
 		open_flow_switch_helper.Install (switchNode[0], switchDevices[0], controller);
 		open_flow_switch_helper.Install (switchNode[1], switchDevices[1], controller);
-		ns3::Ptr<ns3::OpenFlowSwitchNetDevice> p_open_flow_switch_net_device;
-		
+
+		ns3::Ptr<ns3::OpenFlowSwitchNetDevice> p_open_flow_switch_net_device[csmaSwitch.GetN ()];
+		ns3::Ptr<ns3::NetDevice> p_net_device[csmaSwitch.GetN ()];	
 		for (unsigned i = 0; i < csmaSwitch.GetN (); ++i)
 		{
-			ns3::Ptr<ns3::NetDevice> p_net_device = switchNode[i]->GetDevice (0);
-			NS_LOG_INFO("device type = " << p_net_device->GetInstanceTypeId ().GetName ());
+			p_net_device[i] = switchNode[i]->GetDevice (0);
+			NS_LOG_INFO("device type = " << p_net_device[i]->GetInstanceTypeId ().GetName ());
 			
-			if (p_net_device->GetInstanceTypeId () == ns3::OpenFlowSwitchNetDevice::GetTypeId ())
+			if (p_net_device[i]->GetInstanceTypeId () == ns3::OpenFlowSwitchNetDevice::GetTypeId ())
 			{
-				p_open_flow_switch_net_device = p_net_device->GetObject<ns3::OpenFlowSwitchNetDevice> ();
-				NS_LOG_INFO("OpenFlowSwitchNetDevice was found. " << p_open_flow_switch_net_device->GetTypeId ().GetName ());
+				p_open_flow_switch_net_device[i] = p_net_device[i]->GetObject<ns3::OpenFlowSwitchNetDevice> ();
+				NS_LOG_INFO("OpenFlowSwitchNetDevice was found. " << p_open_flow_switch_net_device[i]->GetTypeId ().GetName ());
 			}
 		}
-		controller->SetVlanId (p_open_flow_switch_net_device, 0, 1);
-		controller->SetVlanId (p_open_flow_switch_net_device, 1, 1);
-		controller->SetVlanId (p_open_flow_switch_net_device, 2, 2);
-		controller->SetVlanId (p_open_flow_switch_net_device, 3, 2);
-		controller->SetVlanId (p_open_flow_switch_net_device, 4, 4095); // DPI
+		controller->SetVlanId (p_open_flow_switch_net_device[0], 0, 1);
+		controller->SetVlanId (p_open_flow_switch_net_device[0], 1, 1);
+		controller->SetVlanId (p_open_flow_switch_net_device[0], 2, 1);
+		controller->SetVlanId (p_open_flow_switch_net_device[0], 3, 1);
+		controller->SetVlanId (p_open_flow_switch_net_device[0], 4, 1); // DPI
+		controller->SetVlanId (p_open_flow_switch_net_device[1], 0, 1); // DPI
+		controller->SetVlanId (p_open_flow_switch_net_device[1], 1, 1); // DPI
+		controller->SetVlanId (p_open_flow_switch_net_device[1], 2, 1); // DPI
+		
 	}
 	else
 	{
