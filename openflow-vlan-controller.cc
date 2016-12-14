@@ -139,9 +139,9 @@ VlanController::MirroringToIds (sw_flow_key key, ofp_packet_in* opi, ns3::Ptr<ns
 		ofp_action_vlan_vid vl[1];
 
 		vl[0].type = htons (OFPAT_SET_VLAN_VID);
-		vl[0].len = htons (sizeof(ofp_action_vlan_vid) * 2);
-		vl[0].vlan_vid = htons ((uint16_t) 4095);
-
+		vl[0].len = htons (sizeof(ofp_action_vlan_vid));
+		vl[0].vlan_vid = htons ((uint16_t) 1);
+#if 0
 		// Destination IPv4 Address Re-Set
 		ofp_action_nw_addr nw[1];
 
@@ -157,15 +157,14 @@ VlanController::MirroringToIds (sw_flow_key key, ofp_packet_in* opi, ns3::Ptr<ns
 		dl[0].len = htons (sizeof(ofp_action_dl_addr));
 
 		// MAC Address -> 00:00:00:00:00:09
-		for (int i = 0; i < 5; i++)
+		for (int i = 1; i < 6; i++)
 		{
 			dl[0].dl_addr[i] = 0x00;
 		}
-		dl[0].dl_addr[5] = 0x09;
-
+		dl[0].dl_addr[0] = 0x09;
+#endif
 		// output
 		std::vector<int> s = VlanController::EnumeratePortsWithoutInport (swtch, port, 4095);
-		assert (s.size () == 1);
 
 		ofp_action_output x[1];
 
@@ -175,14 +174,16 @@ VlanController::MirroringToIds (sw_flow_key key, ofp_packet_in* opi, ns3::Ptr<ns
 
 		// Flow-entry (1 flow in 4 acts)
 		size_t vl_offset = 0;
-		size_t nw_offset = vl_offset + sizeof(vl) * 2;
-		size_t dl_offset = nw_offset + sizeof(nw);
-		size_t x_offset = dl_offset + sizeof(dl);
+//		size_t nw_offset = vl_offset + sizeof(vl);
+//		size_t dl_offset = nw_offset + sizeof(nw);
+		size_t x_offset = vl_offset + sizeof(vl);
+//		size_t x_offset = dl_offset + sizeof(dl);
 
-		unsigned char acts[sizeof(vl) * 2 + sizeof(nw) + sizeof(dl) + sizeof(x)];
-		memcpy(acts + vl_offset, vl, sizeof(vl) * 2);
-		memcpy(acts + nw_offset, nw, sizeof(nw));
-		memcpy(acts + dl_offset, dl, sizeof(dl));
+//		unsigned char acts[sizeof(vl) + sizeof(nw) + sizeof(dl) + sizeof(x)];
+		unsigned char acts[sizeof(vl) + sizeof(x)];
+		memcpy(acts + vl_offset, vl, sizeof(vl));
+//		memcpy(acts + nw_offset, nw, sizeof(nw));
+//		memcpy(acts + dl_offset, dl, sizeof(dl));
 		memcpy(acts + x_offset, x, sizeof(x));
 
 		ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, acts, sizeof(acts), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
@@ -219,10 +220,10 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			ofp_action_vlan_vid v[1];
 
 			v[0].type = htons (OFPAT_SET_VLAN_VID);
-			v[0].len = htons (sizeof(ofp_action_vlan_vid) * 2);
+			v[0].len = htons (sizeof(ofp_action_vlan_vid));
 			v[0].vlan_vid = vid;
 
-			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, v, sizeof(v), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
+			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_ADD, v, sizeof(v), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
 			ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 
 			NS_LOG_INFO ("Set VLAN ID : switch=" << swtch << ", port=" << port << ", VLAN ID=" << vid);
@@ -352,6 +353,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			ls.port = in_port;
 			m_learnState.insert (std::make_pair (src_addr, ls));
 			NS_LOG_INFO ("Learned that " << src_addr << " can be found over port " << in_port);
+			NS_LOG_INFO ("src_addr: " << src_addr);
 
 			// Learn src_addr goes to a certain port.
 			ofp_action_output x2[1];
