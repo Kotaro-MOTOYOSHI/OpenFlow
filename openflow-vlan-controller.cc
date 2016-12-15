@@ -129,9 +129,8 @@ VlanController::MirroringToIds (sw_flow_key key, ofp_packet_in* opi, ns3::Ptr<ns
 	ns3::Mac48Address dst_addr;
 	dst_addr.CopyFrom (key.flow.dl_dst);
 	int port = htons (opi->in_port);
-	NS_LOG_INFO (v.size());
 
-	if (!dst_addr.IsBroadcast ()) // 条件は未定
+	if (1) // 条件は未定
 	{
 		// IDS -> VID = 4095
 		NS_LOG_INFO ("Send To IDS (buffer_id = " << opi->buffer_id << ")");
@@ -141,7 +140,7 @@ VlanController::MirroringToIds (sw_flow_key key, ofp_packet_in* opi, ns3::Ptr<ns
 
 		vl[0].type = htons (OFPAT_SET_VLAN_VID);
 		vl[0].len = htons (sizeof(ofp_action_vlan_vid));
-		vl[0].vlan_vid = htons ((uint16_t) 4095);
+		vl[0].vlan_vid = 4095;
 #if 0
 		// Destination IPv4 Address Re-Set
 		ofp_action_nw_addr nw[1];
@@ -170,13 +169,13 @@ VlanController::MirroringToIds (sw_flow_key key, ofp_packet_in* opi, ns3::Ptr<ns
 		{
 			v.push_back (s[i]);
 		}
-NS_LOG_INFO(v.size());
+
 		ofp_action_output x[v.size ()];
 		for (int i = 0; i < (int)v.size (); i++)
 		{
-			x[0].type = htons (OFPAT_OUTPUT);
-			x[0].len = htons (sizeof(ofp_action_output));
-			x[0].port = v[i];
+			x[i].type = htons (OFPAT_OUTPUT);
+			x[i].len = htons (sizeof(ofp_action_output));
+			x[i].port = v[i];
 		}
 
 		// Flow-entry (1 flow in 4 acts)
@@ -280,6 +279,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 					ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, v, sizeof(v), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
 					ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 				}
+				VlanController::MirroringToIds (key, opi, swtch, buffer, v);
 			}
 			else
 			{
@@ -350,7 +350,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 		}
 		
 		// Send To IDS
-		VlanController::MirroringToIds (key, opi, swtch, buffer, v);
+	//	VlanController::MirroringToIds (key, opi, swtch, buffer, v);
 
 		// We can learn a specific port for the source address for future use.
 		ns3::Mac48Address src_addr;
