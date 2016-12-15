@@ -192,7 +192,7 @@ VlanController::MirroringToIds (sw_flow_key key, ofp_packet_in* opi, ns3::Ptr<ns
 //		memcpy(acts + dl_offset, dl, sizeof(dl));
 		memcpy(acts + x_offset, x, sizeof(x));
 
-		ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, acts, sizeof(acts), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
+		ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_ADD, acts, sizeof(acts), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
 		ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 	}
 }
