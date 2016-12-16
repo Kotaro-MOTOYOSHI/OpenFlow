@@ -4,6 +4,8 @@
 #include "ns3/openflow-switch-net-device.h"
 #include "ns3/assert.h"
 
+#include <boost/shared_ptr.hpp>
+
 NS_LOG_COMPONENT_DEFINE ("VlanController");
 NS_OBJECT_ENSURE_REGISTERED (VlanController);
 
@@ -18,6 +20,8 @@ ns3::TypeId VlanController::GetTypeId (void)
 			ns3::TimeValue (ns3::Seconds (0)),
 			ns3::MakeTimeAccessor (&VlanController::m_terminationTime),
 			ns3::MakeTimeChecker ())
+//		.AddAttribute ("InspectionExpression",
+//			""
 		;
 	return tid;
 }
@@ -251,10 +255,15 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 		
 		if (!dst_addr.IsBroadcast ())
 		{
-			LearnState_t::iterator st = m_learnState.find (dst_addr);
-			if (st != m_learnState.end ())
+			VlanMap_t::iterator vmitr = m_vlanMap.find (swtch);
+			if (vmitr != this->m_vlanMap.end ())
 			{
-				out_port = st->second.port;
+				boost::shared_ptr<VlanLearnedState> m_vlanLearnedState = (vmitr->second);
+			}
+			VlanLearnedState::iterator lsitr = m_vlanLearnedState.find (dst_addr);
+			if (lsitr != m_vlanLearnedState.end ())
+			{
+				out_port = lsitr->second;
 				v.clear ();
 				v.push_back (out_port);
 				
@@ -355,14 +364,22 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 		// We can learn a specific port for the source address for future use.
 		ns3::Mac48Address src_addr;
 		src_addr.CopyFrom (key.flow.dl_src);
-		LearnState_t::iterator st = m_learnState.find (src_addr);
-		if (st == m_learnState.end ()) // We haven't learned our source MAC Address yet.
-		{
-			ns3::ofi::LearningController::LearnedState ls;
-			ls.port = in_port;
-			m_learnState.insert (std::make_pair (src_addr, ls));
-			NS_LOG_INFO ("Learned that " << src_addr << " can be found over port " << in_port);
 
+		VlanMap_t::iterator vmitr = m_vlanMap.find (swtch);
+		if (vmitr == m_vlanMap.end ()) // We haven't learned our source MAC Address yet.
+		{
+			m_vlanMap.insert (std::make_pair (swtch, boost::shared_ptr<VlanLearnedState> (new VlanLearnedState ())));
+			vmitr = m_vlanMap.find (swtch);
+		}
+		assert (vmitr != m_vlanMap.end ());
+		boost::shared_ptr<VlanLearnedState> m_vlanLearnedState = (vmitr->second);
+		if (m_vlanLearnedState->find (src_addr) != m_vlanLearnedState->end ())
+		{
+			m_vlanLearnedState->erase (src_addr);
+		}
+		m_vlanLearnedState->insert (std::make_pair (src_addr, in_port));
+		NS_LOG_INFO ("Learned that swtch:" << swtch << ", addr:"  << src_addr << " can be found over port " << in_port);
+			
 			// Learn src_addr goes to a certain port.
 			ofp_action_output x2[1];
 			x2[0].type = htons (OFPAT_OUTPUT);
@@ -375,6 +392,5 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			key.flow.in_port = out_port;
 			ofp_flow_mod* ofm2 = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_MODIFY, x2, sizeof(x2), OFP_FLOW_PERMANENT, m_terminationTime.IsZero () ? OFP_FLOW_PERMANENT : m_terminationTime.GetSeconds ());
 			ns3::ofi::Controller::SendToSwitch (swtch, ofm2, ofm2->header.length);
-		}
 	}
 }

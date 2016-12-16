@@ -37,8 +37,15 @@ private:
 	Vid_map_t vid_map;
 	PortVidMap p_port_vid_map;
 
+	typedef std::multimap<ns3::Mac48Address, int> VlanLearnedState;
+	typedef std::multimap<ns3::Ptr<ns3::OpenFlowSwitchNetDevice>, boost::shared_ptr<VlanLearnedState> > VlanMap_t;
+
+	VlanLearnedState m_vlanLearnedState;
+	VlanMap_t m_vlanMap;
+
 protected:
 	ns3::Time m_terminationTime;
+	std::string inspection_expression;
 };
 
 #endif /* OPENFLOW_VLAN_CONTROLLER_H */
