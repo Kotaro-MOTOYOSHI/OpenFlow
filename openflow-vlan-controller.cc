@@ -256,12 +256,11 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 		if (!dst_addr.IsBroadcast ())
 		{
 			VlanMap_t::iterator vmitr = m_vlanMap.find (swtch);
-			if (vmitr != this->m_vlanMap.end ())
-			{
-				boost::shared_ptr<VlanLearnedState> m_vlanLearnedState = (vmitr->second);
-			}
-			VlanLearnedState::iterator lsitr = m_vlanLearnedState.find (dst_addr);
-			if (lsitr != m_vlanLearnedState.end ())
+			assert(vmitr != this->m_vlanMap.end ());
+
+			boost::shared_ptr<VlanLearnedState> m_vlanLearnedState = (vmitr->second);
+			VlanLearnedState::iterator lsitr = m_vlanLearnedState->find (dst_addr);
+			if (lsitr != m_vlanLearnedState->end ())
 			{
 				out_port = lsitr->second;
 				v.clear ();
