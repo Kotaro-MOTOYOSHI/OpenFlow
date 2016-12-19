@@ -70,12 +70,12 @@ main (int argc, char *argv[])
 
 	NS_LOG_INFO ("Create nodes.");
 	ns3::NodeContainer terminals;
-//	terminals.Create (8);
-	terminals.Create (5);
+	terminals.Create (8);
+//	terminals.Create (5);
 
 	ns3::NodeContainer csmaSwitch;
-	csmaSwitch.Create (1);
-//	csmaSwitch.Create (2);
+//	csmaSwitch.Create (1);
+	csmaSwitch.Create (2);
 
 	NS_LOG_INFO ("Build Topology.");
 	ns3::CsmaHelper csma;
@@ -84,37 +84,37 @@ main (int argc, char *argv[])
 	
 	// Create the csma links, from each terminal to the switch.
 	ns3::NetDeviceContainer terminalDevices;
-//	ns3::NetDeviceContainer switchDevices[2];
-//	switchDevices[1] = ns3::NetDeviceContainer ();
+	ns3::NetDeviceContainer switchDevices[2];
+	switchDevices[1] = ns3::NetDeviceContainer ();
 	
-	ns3::NetDeviceContainer switchDevices;
+//	ns3::NetDeviceContainer switchDevices;
 	for (int i = 0; i < 5; i++)
 	{
 		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (0)));
 		terminalDevices.Add (link.Get (0));
-		switchDevices.Add (link.Get (1));
-//		switchDevices[0].Add (link.Get (1));
+//		switchDevices.Add (link.Get (1));
+		switchDevices[0].Add (link.Get (1));
 	}
 	
-//	for (int i = 5; i < 8; i++)
-//	{
-//		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (1)));
-//		terminalDevices.Add (link.Get (0));
-//		switchDevices[1].Add (link.Get (1));
-//	}
+	for (int i = 5; i < 8; i++)
+	{
+		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (1)));
+		terminalDevices.Add (link.Get (0));
+		switchDevices[1].Add (link.Get (1));
+	}
 
-//	ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (csmaSwitch.Get (0), csmaSwitch.Get(1)));
-//	switchDevices[0].Add (link.Get (0));
-//	switchDevices[1].Add (link.Get (1));
+	ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (csmaSwitch.Get (0), csmaSwitch.Get(1)));
+	switchDevices[0].Add (link.Get (0));
+	switchDevices[1].Add (link.Get (1));
 
 	// Create the switch netdevice, which will do the packet switching
 	ns3::OpenFlowSwitchHelper open_flow_switch_helper;
-	ns3::Ptr <ns3::Node> switchNode;
-	switchNode = csmaSwitch.Get (0);
-//	ns3::Ptr <ns3::Node> switchNode[2];
-//	switchNode[1] = ns3::CreateObject<ns3::Node> ();
-//	switchNode[0] = csmaSwitch.Get (0);
-//	switchNode[1] = csmaSwitch.Get (1);
+//	ns3::Ptr <ns3::Node> switchNode;
+//	switchNode = csmaSwitch.Get (0);
+
+	ns3::Ptr <ns3::Node> switchNode[2];
+	switchNode[0] = csmaSwitch.Get (0);
+	switchNode[1] = csmaSwitch.Get (1);
 
 	if (vlan)
 	{
@@ -123,40 +123,43 @@ main (int argc, char *argv[])
 		{
 			controller->SetAttribute ("TerminationTime", ns3::TimeValue (timeout));
 		}
-		open_flow_switch_helper.Install (switchNode, switchDevices, controller);
-//		open_flow_switch_helper.Install (switchNode[0], switchDevices[0], controller);
-//		open_flow_switch_helper.Install (switchNode[1], switchDevices[1], controller);
+//		open_flow_switch_helper.Install (switchNode, switchDevices, controller);
+		open_flow_switch_helper.Install (switchNode[0], switchDevices[0], controller);
+		open_flow_switch_helper.Install (switchNode[1], switchDevices[1], controller);
 
-		ns3::Ptr<ns3::OpenFlowSwitchNetDevice> p_open_flow_switch_net_device;
-		ns3::Ptr<ns3::NetDevice> p_net_device;
+//		ns3::Ptr<ns3::OpenFlowSwitchNetDevice> p_open_flow_switch_net_device;
+//		ns3::Ptr<ns3::NetDevice> p_net_device;
 		
-//		ns3::Ptr<ns3::OpenFlowSwitchNetDevice> p_open_flow_switch_net_device[2];
-//		p_open_flow_switch_net_device[1] = ns3::CreateObject<ns3::OpenFlowSwitchNetDevice> ();
-//		ns3::Ptr<ns3::NetDevice> p_net_device[2];
-		for (unsigned i = 0; i < switchNode->GetNDevices (); ++i)
-//		for (unsigned i = 0; switchNode[i]->GetNDevices () > 0; ++i)
+		ns3::Ptr<ns3::OpenFlowSwitchNetDevice> p_open_flow_switch_net_device[2];
+		p_open_flow_switch_net_device[1] = ns3::CreateObject<ns3::OpenFlowSwitchNetDevice> ();
+		ns3::Ptr<ns3::NetDevice> p_net_device[2];
+//		for (unsigned i = 0; i < switchNode->GetNDevices (); ++i)
+		for (unsigned i = 0; switchNode[i]->GetNDevices () > 0; i++)
 		{
-			p_net_device = switchNode->GetDevice (i);
-//			p_net_device[i] = switchNode[i]->GetDevice (0);
-			NS_LOG_INFO("device type = " << p_net_device->GetInstanceTypeId ().GetName ());
-//			NS_LOG_INFO("device type = " << p_net_device[i]->GetInstanceTypeId ().GetName ());
+//			p_net_device = switchNode->GetDevice (i);
+			p_net_device[i] = switchNode[i]->GetDevice (0);
+//			NS_LOG_INFO("device type = " << p_net_device->GetInstanceTypeId ().GetName ());
+			NS_LOG_INFO("device type = " << p_net_device[i]->GetInstanceTypeId ().GetName ());
 			
-			if (p_net_device->GetInstanceTypeId () == ns3::OpenFlowSwitchNetDevice::GetTypeId ())
-//			if (p_net_device[i]->GetInstanceTypeId () == ns3::OpenFlowSwitchNetDevice::GetTypeId ())
+//			if (p_net_device->GetInstanceTypeId () == ns3::OpenFlowSwitchNetDevice::GetTypeId ())
+			if (p_net_device[i]->GetInstanceTypeId () == ns3::OpenFlowSwitchNetDevice::GetTypeId ())
 			{
-				p_open_flow_switch_net_device = p_net_device->GetObject<ns3::OpenFlowSwitchNetDevice> ();
-//				p_open_flow_switch_net_device[i] = p_net_device[i]->GetObject<ns3::OpenFlowSwitchNetDevice> ();
-				NS_LOG_INFO("OpenFlowSwitchNetDevice was found. " << p_open_flow_switch_net_device->GetTypeId ().GetName ());
+//				p_open_flow_switch_net_device = p_net_device->GetObject<ns3::OpenFlowSwitchNetDevice> ();
+				p_open_flow_switch_net_device[i] = p_net_device[i]->GetObject<ns3::OpenFlowSwitchNetDevice> ();
+//				NS_LOG_INFO("OpenFlowSwitchNetDevice was found. " << p_open_flow_switch_net_device->GetTypeId ().GetName ());
+				NS_LOG_INFO("OpenFlowSwitchNetDevice was found. " << p_open_flow_switch_net_device[i]->GetTypeId ().GetName ());
 			}
 		}
-		controller->SetVlanId (p_open_flow_switch_net_device, 0, 1);
-		controller->SetVlanId (p_open_flow_switch_net_device, 1, 1);
-		controller->SetVlanId (p_open_flow_switch_net_device, 2, 1);
-		controller->SetVlanId (p_open_flow_switch_net_device, 3, 1);
-		controller->SetVlanId (p_open_flow_switch_net_device, 4, 4095); // DPI
-//		controller->SetVlanId (p_open_flow_switch_net_device[1], 0, 1); // DPI
-//		controller->SetVlanId (p_open_flow_switch_net_device[1], 1, 1); // DPI
-//		controller->SetVlanId (p_open_flow_switch_net_device[1], 2, 1); // DPI
+		controller->SetVlanId (p_open_flow_switch_net_device[0], 0, 1);
+		controller->SetVlanId (p_open_flow_switch_net_device[0], 1, 1);
+		controller->SetVlanId (p_open_flow_switch_net_device[0], 2, 1);
+		controller->SetVlanId (p_open_flow_switch_net_device[0], 3, 1);
+		controller->SetVlanId (p_open_flow_switch_net_device[0], 4, 1); // DPI
+		controller->SetVlanId (p_open_flow_switch_net_device[0], 5, 1); // DPI
+		controller->SetVlanId (p_open_flow_switch_net_device[1], 0, 1); // DPI
+		controller->SetVlanId (p_open_flow_switch_net_device[1], 1, 1); // DPI
+		controller->SetVlanId (p_open_flow_switch_net_device[1], 2, 1); // DPI
+		controller->SetVlanId (p_open_flow_switch_net_device[1], 3, 1); // DPI
 	}
 	else
 	{
@@ -165,9 +168,9 @@ main (int argc, char *argv[])
 		{
 			controller->SetAttribute ("ExpirationTime", ns3::TimeValue (timeout));
 		}
-		open_flow_switch_helper.Install (switchNode, switchDevices, controller);
-//		open_flow_switch_helper.Install (switchNode[0], switchDevices[0], controller);
-//		open_flow_switch_helper.Install (switchNode[1], switchDevices[1], controller);
+//		open_flow_switch_helper.Install (switchNode, switchDevices, controller);
+		open_flow_switch_helper.Install (switchNode[0], switchDevices[0], controller);
+		open_flow_switch_helper.Install (switchNode[1], switchDevices[1], controller);
 	}
 
 	// Add internet stack to the terminals
