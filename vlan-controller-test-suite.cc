@@ -70,7 +70,7 @@ main (int argc, char *argv[])
 
 	NS_LOG_INFO ("Create nodes.");
 	ns3::NodeContainer terminals;
-	terminals.Create (8);
+	terminals.Create (7);
 //	terminals.Create (5);
 
 	ns3::NodeContainer csmaSwitch;
@@ -86,7 +86,7 @@ main (int argc, char *argv[])
 	ns3::NetDeviceContainer terminalDevices;
 	ns3::NetDeviceContainer switchDevices[2];
 //	ns3::NetDeviceContainer switchDevices;
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (0)));
 		terminalDevices.Add (link.Get (0));
@@ -94,7 +94,7 @@ main (int argc, char *argv[])
 		switchDevices[0].Add (link.Get (1));
 	}
 	
-	for (int i = 5; i < 8; i++)
+	for (int i = 4; i < 7; i++)
 	{
 		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (1)));
 		terminalDevices.Add (link.Get (0));
@@ -119,7 +119,7 @@ main (int argc, char *argv[])
 		ns3::Ptr<VlanController> controller = ns3::CreateObject<VlanController> ();
 		if (!timeout.IsZero ())
 		{
-			controller->SetAttribute ("TerminationTime", ns3::TimeValue (timeout));
+			controller->SetAttribute ("ExpirationTime", ns3::TimeValue (timeout));
 		}
 //		open_flow_switch_helper.Install (switchNode, switchDevices, controller);
 		open_flow_switch_helper.Install (switchNode[0], switchDevices[0], controller);
@@ -153,7 +153,6 @@ main (int argc, char *argv[])
 		controller->SetVlanId (p_open_flow_switch_net_device[0], 2, 1);
 		controller->SetVlanId (p_open_flow_switch_net_device[0], 3, 1);
 		controller->SetVlanId (p_open_flow_switch_net_device[0], 4, 1); // DPI
-		controller->SetVlanId (p_open_flow_switch_net_device[0], 5, 1); // DPI
 		controller->SetVlanId (p_open_flow_switch_net_device[1], 0, 1); // DPI
 		controller->SetVlanId (p_open_flow_switch_net_device[1], 1, 1); // DPI
 		controller->SetVlanId (p_open_flow_switch_net_device[1], 2, 1); // DPI

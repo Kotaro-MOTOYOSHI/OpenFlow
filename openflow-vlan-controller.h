@@ -11,7 +11,7 @@
 #include <memory>
 #include <boost/shared_ptr.hpp>
 
-class VlanController : public ns3::ofi::LearningController
+class VlanController : public ns3::ofi::Controller
 {
 public:
 	static ns3::TypeId GetTypeId (void);
@@ -44,7 +44,7 @@ private:
 	VlanMap_t m_vlanMap;
 
 protected:
-	ns3::Time m_terminationTime;
+	ns3::Time m_expirationTime;
 	std::string inspection_expression;
 };
 
