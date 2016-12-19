@@ -60,6 +60,10 @@ main (int argc, char *argv[])
 
 	cmd.Parse (argc, argv);
 
+//	int n_switches = 2;
+	int n_switches = 20;
+	int n_terminals = 2 * n_switches + 3;
+
 	if (verbose)
 	{
 		ns3::LogComponentEnable ("VlanController", ns3::LOG_LEVEL_INFO);
@@ -70,12 +74,10 @@ main (int argc, char *argv[])
 
 	NS_LOG_INFO ("Create nodes.");
 	ns3::NodeContainer terminals;
-	terminals.Create (7);
-//	terminals.Create (5);
+	terminals.Create (n_terminals);
 
 	ns3::NodeContainer csmaSwitch;
-//	csmaSwitch.Create (1);
-	csmaSwitch.Create (2);
+	csmaSwitch.Create (n_switches);
 
 	NS_LOG_INFO ("Build Topology.");
 	ns3::CsmaHelper csma;
@@ -84,35 +86,79 @@ main (int argc, char *argv[])
 	
 	// Create the csma links, from each terminal to the switch.
 	ns3::NetDeviceContainer terminalDevices;
-	ns3::NetDeviceContainer switchDevices[2];
-//	ns3::NetDeviceContainer switchDevices;
-	for (int i = 0; i < 4; i++)
+	ns3::NetDeviceContainer switchDevices[n_switches];
+	if (n_switches == 1)
 	{
-		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (0)));
-		terminalDevices.Add (link.Get (0));
-//		switchDevices.Add (link.Get (1));
-		switchDevices[0].Add (link.Get (1));
+		for (int i = 0; i < n_terminals; i++)
+		{
+			ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (0)));
+			terminalDevices.Add (link.Get (0));
+			switchDevices[0].Add (link.Get (1));
+		}
 	}
-	
-	for (int i = 4; i < 7; i++)
+	else if (n_switches == 2)
 	{
-		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (1)));
-		terminalDevices.Add (link.Get (0));
+		for (int i = 0; i < 4; i++)
+		{
+			ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (0)));
+			terminalDevices.Add (link.Get (0));
+			switchDevices[0].Add (link.Get (1));
+		}
+		
+		for (int i = 4; i < n_terminals; i++)
+		{
+			ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (1)));
+			terminalDevices.Add (link.Get (0));
+			switchDevices[1].Add (link.Get (1));
+		}
+
+		ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (csmaSwitch.Get (0), csmaSwitch.Get(1)));
+		switchDevices[0].Add (link.Get (0));
 		switchDevices[1].Add (link.Get (1));
 	}
+	else
+	{
+		int j = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (0)));
+			terminalDevices.Add (link.Get (0));
+			switchDevices[0].Add (link.Get (1));
+		}
 
-	ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (csmaSwitch.Get (0), csmaSwitch.Get(1)));
-	switchDevices[0].Add (link.Get (0));
-	switchDevices[1].Add (link.Get (1));
+		for (j = 1; j < n_switches - 1; j++)
+		{
+			for (int i = 2 * j + 2; i < 2 * j + 4; i++)
+			{
+				ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (j)));
+				terminalDevices.Add (link.Get (0));
+				switchDevices[j].Add (link.Get (1));
+			}
+		}
 
+		j = n_switches - 1;
+		for (int i = 2 * j + 2; i < n_terminals; i++)
+		{
+			ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (terminals.Get (i), csmaSwitch.Get (j)));
+			terminalDevices.Add (link.Get (0));
+			switchDevices[j].Add (link.Get (1));
+		}
+		
+		for (int i = 1; i < n_switches; i++)
+		{
+			ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (csmaSwitch.Get (i - 1), csmaSwitch.Get(i)));
+			switchDevices[i - 1].Add (link.Get (0));
+			switchDevices[i].Add (link.Get (1));
+		}	
+	}
+			
 	// Create the switch netdevice, which will do the packet switching
 	ns3::OpenFlowSwitchHelper open_flow_switch_helper;
-//	ns3::Ptr <ns3::Node> switchNode;
-//	switchNode = csmaSwitch.Get (0);
-
-	ns3::Ptr <ns3::Node> switchNode[2];
-	switchNode[0] = csmaSwitch.Get (0);
-	switchNode[1] = csmaSwitch.Get (1);
+	ns3::Ptr <ns3::Node> switchNode[n_switches];
+	for (int i = 0; i < n_switches; i++)
+	{
+		switchNode[i] = csmaSwitch.Get (i);
+	}
 
 	if (vlan)
 	{
@@ -121,42 +167,38 @@ main (int argc, char *argv[])
 		{
 			controller->SetAttribute ("ExpirationTime", ns3::TimeValue (timeout));
 		}
-//		open_flow_switch_helper.Install (switchNode, switchDevices, controller);
-		open_flow_switch_helper.Install (switchNode[0], switchDevices[0], controller);
-		open_flow_switch_helper.Install (switchNode[1], switchDevices[1], controller);
-
-//		ns3::Ptr<ns3::OpenFlowSwitchNetDevice> p_open_flow_switch_net_device;
-//		ns3::Ptr<ns3::NetDevice> p_net_device;
-		
-		ns3::Ptr<ns3::OpenFlowSwitchNetDevice> p_open_flow_switch_net_device[2];
-		p_open_flow_switch_net_device[1] = ns3::CreateObject<ns3::OpenFlowSwitchNetDevice> ();
-		ns3::Ptr<ns3::NetDevice> p_net_device[2];
-//		for (unsigned i = 0; i < switchNode->GetNDevices (); ++i)
-		for (unsigned i = 0; switchNode[i]->GetNDevices () > 0; i++)
+		for (int i = 0; i < n_switches; i++)
 		{
-//			p_net_device = switchNode->GetDevice (i);
-			p_net_device[i] = switchNode[i]->GetDevice (0);
-//			NS_LOG_INFO("device type = " << p_net_device->GetInstanceTypeId ().GetName ());
-			NS_LOG_INFO("device type = " << p_net_device[i]->GetInstanceTypeId ().GetName ());
-			
-//			if (p_net_device->GetInstanceTypeId () == ns3::OpenFlowSwitchNetDevice::GetTypeId ())
-			if (p_net_device[i]->GetInstanceTypeId () == ns3::OpenFlowSwitchNetDevice::GetTypeId ())
+			open_flow_switch_helper.Install (switchNode[i], switchDevices[i], controller);
+		}
+
+		ns3::Ptr<ns3::NetDevice> p_net_device;
+		ns3::Ptr<ns3::OpenFlowSwitchNetDevice> p_open_flow_switch_net_device[n_switches];
+		for (unsigned i = 0; i < (unsigned)n_switches; i++)
+		{
+			for (unsigned j = 0; j < switchNode[i]->GetNDevices (); j++)
 			{
-//				p_open_flow_switch_net_device = p_net_device->GetObject<ns3::OpenFlowSwitchNetDevice> ();
-				p_open_flow_switch_net_device[i] = p_net_device[i]->GetObject<ns3::OpenFlowSwitchNetDevice> ();
-//				NS_LOG_INFO("OpenFlowSwitchNetDevice was found. " << p_open_flow_switch_net_device->GetTypeId ().GetName ());
-				NS_LOG_INFO("OpenFlowSwitchNetDevice was found. " << p_open_flow_switch_net_device[i]->GetTypeId ().GetName ());
+				p_net_device = switchNode[i]->GetDevice (j);
+				NS_LOG_INFO("device type = " << p_net_device->GetInstanceTypeId ().GetName ());
+				
+				if (p_net_device->GetInstanceTypeId () == ns3::OpenFlowSwitchNetDevice::GetTypeId ())
+				{
+					p_open_flow_switch_net_device[i] = p_net_device->GetObject<ns3::OpenFlowSwitchNetDevice> ();
+					NS_LOG_INFO("OpenFlowSwitchNetDevice was found. " << p_open_flow_switch_net_device[i]->GetTypeId ().GetName ());
+				}
 			}
 		}
-		controller->SetVlanId (p_open_flow_switch_net_device[0], 0, 1);
-		controller->SetVlanId (p_open_flow_switch_net_device[0], 1, 1);
-		controller->SetVlanId (p_open_flow_switch_net_device[0], 2, 1);
-		controller->SetVlanId (p_open_flow_switch_net_device[0], 3, 1);
-		controller->SetVlanId (p_open_flow_switch_net_device[0], 4, 1); // DPI
-		controller->SetVlanId (p_open_flow_switch_net_device[1], 0, 1); // DPI
-		controller->SetVlanId (p_open_flow_switch_net_device[1], 1, 1); // DPI
-		controller->SetVlanId (p_open_flow_switch_net_device[1], 2, 1); // DPI
-		controller->SetVlanId (p_open_flow_switch_net_device[1], 3, 1); // DPI
+		for (int i = 0; i < 5; i++)
+		{
+			controller->SetVlanId (p_open_flow_switch_net_device[0], i, 1);
+		}
+		for (int i = 1; i < n_switches; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				controller->SetVlanId (p_open_flow_switch_net_device[i], j, 1);
+			}
+		}
 	}
 	else
 	{
@@ -165,9 +207,10 @@ main (int argc, char *argv[])
 		{
 			controller->SetAttribute ("ExpirationTime", ns3::TimeValue (timeout));
 		}
-//		open_flow_switch_helper.Install (switchNode, switchDevices, controller);
-		open_flow_switch_helper.Install (switchNode[0], switchDevices[0], controller);
-		open_flow_switch_helper.Install (switchNode[1], switchDevices[1], controller);
+		for (int i = 0; i < n_switches; i++)
+		{
+			open_flow_switch_helper.Install (switchNode[i], switchDevices[i], controller);
+		}
 	}
 
 	// Add internet stack to the terminals
@@ -201,15 +244,15 @@ main (int argc, char *argv[])
 	//
 	// Create a similar flow from n3 to n2, starting at time 1.1 seconds
 	//
-//	ns3::OnOffHelper onoff2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.4"), port)));
-//	onoff2.SetConstantRate (ns3::DataRate ("500kb/s"));
-//
-//	app = onoff2.Install (terminals.Get (2));
-//	app.Start (ns3::Seconds (1.1));
-//	app.Stop (ns3::Seconds (10.0));
+	ns3::OnOffHelper onoff2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.38"), port)));
+	onoff2.SetConstantRate (ns3::DataRate ("500kb/s"));
+
+	app = onoff2.Install (terminals.Get (11));
+	app.Start (ns3::Seconds (1.1));
+	app.Stop (ns3::Seconds (10.0));
 
 	// Create ana optional packet sink to receive these packets
-	app = sink.Install (terminals.Get (3));
+	app = sink.Install (terminals.Get (37));
 	app.Start (ns3::Seconds (0.0));
 
 	NS_LOG_INFO ("Configure Tracing.");
