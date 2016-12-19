@@ -4,8 +4,6 @@
 #include "ns3/openflow-switch-net-device.h"
 #include "ns3/assert.h"
 
-#include <boost/shared_ptr.hpp>
-
 NS_LOG_COMPONENT_DEFINE ("VlanController");
 NS_OBJECT_ENSURE_REGISTERED (VlanController);
 
@@ -182,7 +180,7 @@ VlanController::MirroringToIds (sw_flow_key key, ofp_packet_in* opi, ns3::Ptr<ns
 			x[i].port = v[i];
 		}
 
-		// Flow-entry (1 flow in 4 acts)
+		// Flow-entry
 		size_t vl_offset = 0;
 //		size_t nw_offset = vl_offset + sizeof(vl);
 //		size_t dl_offset = nw_offset + sizeof(nw);

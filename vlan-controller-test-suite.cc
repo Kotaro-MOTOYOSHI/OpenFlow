@@ -85,8 +85,6 @@ main (int argc, char *argv[])
 	// Create the csma links, from each terminal to the switch.
 	ns3::NetDeviceContainer terminalDevices;
 	ns3::NetDeviceContainer switchDevices[2];
-	switchDevices[1] = ns3::NetDeviceContainer ();
-	
 //	ns3::NetDeviceContainer switchDevices;
 	for (int i = 0; i < 5; i++)
 	{
