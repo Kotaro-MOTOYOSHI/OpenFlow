@@ -216,6 +216,9 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 		key.wildcards = 0;
 		flow_extract (buffer, port != -1 ? port : OFPP_NONE, &key.flow);
 		uint16_t vid = key.flow.dl_vlan;
+		
+//		NS_LOG_INFO("dl_type: " << key.flow.dl_type);
+//		NS_LOG_INFO("dl_vlan: " << key.flow.dl_vlan);
 
 		// Set VLAN ID, if buffer do not have VLAN ID
 		if (vid == OFP_VLAN_NONE)
@@ -227,8 +230,8 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			v[0].len = htons (sizeof(ofp_action_vlan_vid));
 			v[0].vlan_vid = vid;
 
-			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_ADD, v, sizeof(v), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
-			ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
+			ofp_flow_mod* ofm_vlan = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_ADD, v, sizeof(v), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+			ns3::ofi::Controller::SendToSwitch (swtch, ofm_vlan, ofm_vlan->header.length);
 
 			NS_LOG_INFO ("Set VLAN ID : switch=" << swtch << ", port=" << port << ", VLAN ID=" << vid);
 		}
@@ -271,7 +274,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, 1);
 				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 
-				VlanController::MirroringToIds (key, opi, swtch, buffer, v);
+//				VlanController::MirroringToIds (key, opi, swtch, buffer, v);
 			}
 else{
 assert(vid != 4095);
