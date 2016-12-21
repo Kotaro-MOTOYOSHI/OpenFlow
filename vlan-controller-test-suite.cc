@@ -190,14 +190,24 @@ main (int argc, char *argv[])
 		}
 		for (int i = 0; i < 5; i++)
 		{
-			controller->SetVlanId (p_open_flow_switch_net_device[0], i, 1);
+			if (i == 3)
+			{
+				controller->SetVlanId (p_open_flow_switch_net_device[0], 3, 4095);
+			}
+			else
+			{
+				controller->SetVlanId (p_open_flow_switch_net_device[0], i, 1);
+			}
 		}
+		
 		for (int i = 1; i < n_switches; i++)
 		{
 			for (int j = 0; j < 4; j++)
 			{
 				controller->SetVlanId (p_open_flow_switch_net_device[i], j, 1);
 			}
+			controller->SetVlanId (p_open_flow_switch_net_device[i], 2, 4095);
+			controller->SetVlanId (p_open_flow_switch_net_device[i], 3, 4095);
 		}
 	}
 	else
@@ -227,7 +237,7 @@ main (int argc, char *argv[])
 	NS_LOG_INFO ("Create Applications.");
 	uint16_t port = 9; // Discard port
 	
-	ns3::OnOffHelper onoff ("ns3::TcpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.2"), port)));
+	ns3::OnOffHelper onoff ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.2"), port)));
 	onoff.SetConstantRate (ns3::DataRate ("500kb/s"));
 
 	ns3::ApplicationContainer app = onoff.Install (terminals.Get (0));
@@ -237,14 +247,14 @@ main (int argc, char *argv[])
 	app.Stop (ns3::Seconds (10.0));
 
 	// Create ana optional packet sink to receive these packets
-	ns3::PacketSinkHelper sink ("ns3::TcpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
+	ns3::PacketSinkHelper sink ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
 	app = sink.Install (terminals.Get (1));
 	app.Start (ns3::Seconds (0.0));
 
 	//
 	// Create a similar flow from n3 to n2, starting at time 1.1 seconds
 	//
-	ns3::OnOffHelper onoff2 ("ns3::TcpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.38"), port)));
+	ns3::OnOffHelper onoff2 ("ns3::UdpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.38"), port)));
 	onoff2.SetConstantRate (ns3::DataRate ("500kb/s"));
 
 	app = onoff2.Install (terminals.Get (11));

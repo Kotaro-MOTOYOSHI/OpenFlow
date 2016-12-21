@@ -40,10 +40,6 @@ VlanController::SetVlanId (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, c
 	} 
 	assert (mm_iterator != vid_map.end ());
 	boost::shared_ptr<PortVidMap> p_port_vid_map = (mm_iterator->second);
-	if (p_port_vid_map->find (port) != p_port_vid_map->end ())
-	{
-		p_port_vid_map->erase (port);
-	}
 	p_port_vid_map->insert (std::make_pair (port,vid));
 }
 
@@ -194,7 +190,7 @@ VlanController::MirroringToIds (sw_flow_key key, ofp_packet_in* opi, ns3::Ptr<ns
 //		memcpy(acts + dl_offset, dl, sizeof(dl));
 		memcpy(acts + x_offset, x, sizeof(x));
 
-		ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_ADD, acts, sizeof(acts), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+		ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, acts, sizeof(acts), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
 		ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 	}
 }
@@ -254,7 +250,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 		if (!dst_addr.IsBroadcast ())
 		{
 			VlanMap_t::iterator vmitr = m_vlanMap.find (swtch);
-			assert(vmitr != this->m_vlanMap.end ());
+			if (vmitr != this->m_vlanMap.end ()){
 
 			boost::shared_ptr<VlanLearnedState> m_vlanLearnedState = (vmitr->second);
 			VlanLearnedState::iterator lsitr = m_vlanLearnedState->find (dst_addr);
@@ -263,7 +259,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				out_port = lsitr->second;
 				v.clear ();
 				v.push_back (out_port);
-				
+
 				// Create output-to-port action if already learned
 				ofp_action_output x[1];
 				
@@ -272,21 +268,14 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				x[0].port = out_port;
 
 				// Create a new flow
-				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, 1);
 				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 
-				if (GetVlanId (swtch, out_port) == 0)
-				{
-					ofp_action_header v[1];
-					
-					v[0].type = htons (OFPAT_STRIP_VLAN);
-					v[0].len = htons (sizeof(ofp_action_header));
-					
-					ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, v, sizeof(v), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
-					ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
-				}
 				VlanController::MirroringToIds (key, opi, swtch, buffer, v);
 			}
+else{
+assert(vid != 4095);
+}}
 			else
 			{
 				NS_LOG_INFO ("Setting Multicast : Don't know yet what port " << dst_addr << " is connected to");
@@ -305,21 +294,6 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero() ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
 
 				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
-
-				// strip
-				for (int i = 0; i < (int)v.size(); i++)
-				{
-					if (GetVlanId(swtch, v[i]) == 0)
-					{
-						ofp_action_header s[1];
-						
-						s[0].type = htons (OFPAT_STRIP_VLAN);
-						s[0].len = htons (sizeof(ofp_action_header));
-
-						ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, s, sizeof(s), OFP_FLOW_PERMANENT, m_expirationTime.IsZero() ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
-						ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
-					}
-				}
 			}
 		}
 		else
@@ -339,24 +313,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
 			ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 
-			// strip
-			for (int i = 0; i < (int)v.size(); i++) 
-			{
-				if (GetVlanId(swtch, v[i]) == 0)
-				{
-					ofp_action_header s[1];
-
-					s[0].type = htons (OFPAT_STRIP_VLAN);
-					s[0].len = htons (sizeof(ofp_action_header));
-
-					ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_MODIFY, s, sizeof(s), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
-					ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
-				}
-			}
 		}
-		
-		// Send To IDS
-	//	VlanController::MirroringToIds (key, opi, swtch, buffer, v);
 
 		// We can learn a specific port for the source address for future use.
 		ns3::Mac48Address src_addr;
@@ -387,7 +344,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 			src_addr.CopyTo (key.flow.dl_dst);
 			dst_addr.CopyTo (key.flow.dl_src);
 			key.flow.in_port = out_port;
-			ofp_flow_mod* ofm2 = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_MODIFY, x2, sizeof(x2), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
+			ofp_flow_mod* ofm2 = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_ADD, x2, sizeof(x2), OFP_FLOW_PERMANENT, m_expirationTime.IsZero () ? OFP_FLOW_PERMANENT : m_expirationTime.GetSeconds ());
 			ns3::ofi::Controller::SendToSwitch (swtch, ofm2, ofm2->header.length);
 	}
 }
