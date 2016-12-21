@@ -206,8 +206,8 @@ main (int argc, char *argv[])
 			{
 				controller->SetVlanId (p_open_flow_switch_net_device[i], j, 1);
 			}
-			controller->SetVlanId (p_open_flow_switch_net_device[i], 2, 4095);
-			controller->SetVlanId (p_open_flow_switch_net_device[i], 3, 4095);
+//			controller->SetVlanId (p_open_flow_switch_net_device[i], 2, 4095);
+//			controller->SetVlanId (p_open_flow_switch_net_device[i], 3, 4095);
 		}
 	}
 	else
