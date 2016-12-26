@@ -78,7 +78,7 @@ main (int argc, char *argv[])
 	// Create the csma links, from each terminal to the switch.
 	ns3::NetDeviceContainer terminalDevices;
 	ns3::NetDeviceContainer switchDevices[n_switches];
-
+NS_LOG_INFO("81:");
 	// [switch 1] -- [ips imitation(switch 0)] -- [switch 2]
 	
 	for (int i = 1; i <= 2; i++)
@@ -92,7 +92,7 @@ main (int argc, char *argv[])
 	
 	for (int i = 3; i <= 6; i++)
 	{
-		for (int j = 1; j <= 2; i++)
+		for (int j = 1; j <= 2; j++)
 		{
 			ns3::NetDeviceContainer link = csma.Install (ns3::NodeContainer (csmaSwitch.Get (j), csmaSwitch.Get (i)));
 			switchDevices[j].Add (link.Get (0));
@@ -101,6 +101,7 @@ main (int argc, char *argv[])
 	}
 
 	// for i in 3-6; [switch i] -- [switch 2*i+1, 2*i+2]
+NS_LOG_INFO("104:");
 	
 	for (int i = 3; i <= 6; i++)
 	{
@@ -114,6 +115,7 @@ main (int argc, char *argv[])
 
 	// for i in 7-14 [switch i] -- [2 terminals]
 	
+NS_LOG_INFO("117:");
 	for (int i = 7; i < n_switches; i++)
 	{
 		for (int j = 2 * i - 14; j <= 2 * i - 13; j++)
@@ -125,9 +127,10 @@ main (int argc, char *argv[])
 	}
 	
 	// End of csma link
+NS_LOG_INFO("128:");
 	
 	ns3::OpenFlowSwitchHelper openFlowSwitchHelper;
-        ns3::Ptr <ns3::Node> switchNode[n_switches];
+	ns3::Ptr <ns3::Node> switchNode[n_switches];
 	
 	for (int i = 0; i < n_switches; i++)
 	{
@@ -151,18 +154,18 @@ main (int argc, char *argv[])
 	// [switch 1-2, 7-14] -- [openFlowBasicController]
 	for (int i = 1; i <= 2; i++)
 	{
-		openFlowSwitchHelper.Intall (switchNode[i], switchDevices[i], openFlowBasicController);
+		openFlowSwitchHelper.Install (switchNode[i], switchDevices[i], openFlowBasicController);
 	}
 
 	for (int i = 7; i < n_switches; i++)
 	{
-		openFlowSwitchHelper.Intall (switchNode[i], switchDevices[i], openFlowBasicController);
+		openFlowSwitchHelper.Install (switchNode[i], switchDevices[i], openFlowBasicController);
 	}
 
 	// [switch 3-6] -- [openFlowSpecialController]
 	for (int i = 3; i <= 6; i++)
 	{
-		openFlowSwitchHelper.Intall (switchNode[i], switchDevices[i], openFlowSpecialController);
+		openFlowSwitchHelper.Install (switchNode[i], switchDevices[i], openFlowSpecialController);
 	}
 
 	ns3::Ptr<ns3::NetDevice> p_NetDevice;
@@ -181,4 +184,70 @@ main (int argc, char *argv[])
 			}
 		}
 	}
+	
+	// Add internet stack to the terminals
+	ns3::InternetStackHelper internet;
+	internet.Install (terminals);
+	
+	// We have got the "hardware" in place. Now we need to add IP Addresses.
+	NS_LOG_INFO ("Assign IP Addresses.");
+	ns3::Ipv4AddressHelper ipv4;
+	ipv4.SetBase ("10.1.1.0", "255.255.255.0");
+	ipv4.Assign (terminalDevices);
 
+	// Create an On-Off application to send UDP datagrams from n0 to n1.
+	NS_LOG_INFO ("Create Applications.");
+	uint16_t port = 9; // Discard port
+	
+	ns3::OnOffHelper onoff ("ns3::TcpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.9"), port)));
+	onoff.SetConstantRate (ns3::DataRate ("500kb/s"));
+
+	ns3::ApplicationContainer app = onoff.Install (terminals.Get (0));
+
+	// Start the application
+	app.Start (ns3::Seconds (1.0));
+	app.Stop (ns3::Seconds (10.0));
+
+	// Create ana optional packet sink to receive these packets
+	ns3::PacketSinkHelper sink ("ns3::TcpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
+	app = sink.Install (terminals.Get (8));
+	app.Start (ns3::Seconds (0.0));
+
+	//
+	// Create a similar flow from n3 to n2, starting at time 1.1 seconds
+	//
+//	ns3::OnOffHelper onoff2 ("ns3::TcpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.38"), port)));
+//	onoff2.SetConstantRate (ns3::DataRate ("500kb/s"));
+
+//	app = onoff2.Install (terminals.Get (11));
+//	app.Start (ns3::Seconds (1.1));
+//	app.Stop (ns3::Seconds (10.0));
+
+	// Create ana optional packet sink to receive these packets
+//	app = sink.Install (terminals.Get (37));
+//	app.Start (ns3::Seconds (0.0));
+
+	NS_LOG_INFO ("Configure Tracing.");
+
+	//
+	// Configure tracing of all enqueue, dequeue, and NetDevice receive events.
+	// Trace output will be sent to the file "openflow-switch.tr"
+	//
+	ns3::AsciiTraceHelper ascii;
+	csma.EnableAsciiAll (ascii.CreateFileStream ("supercore.tr"));
+
+	//
+	// Also configure some tcpdump traces; each interface will be traced.
+	// The output files will be named: openflow-vlan-switch-<nodeId>-<interfaceId>.pcap
+	// and can be read by the "tcpdump -r" command (use "-tt" option to display timestamps correctly)
+	//
+	csma.EnablePcapAll ("supercore", false);
+
+	//
+	// Now, do the actual simulation.
+	//
+	NS_LOG_INFO ("Run Simulation.");
+	ns3::Simulator::Run ();
+	ns3::Simulator::Destroy ();
+	NS_LOG_INFO ("Done.");
+}
