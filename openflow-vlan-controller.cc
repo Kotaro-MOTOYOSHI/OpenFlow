@@ -274,7 +274,7 @@ VlanController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch,
 				ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, 1);
 				ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 
-//				VlanController::MirroringToIds (key, opi, swtch, buffer, v);
+				VlanController::MirroringToIds (key, opi, swtch, buffer, v);
 			}
 else{
 assert(vid != 4095);
