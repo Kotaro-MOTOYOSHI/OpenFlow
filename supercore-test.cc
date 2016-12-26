@@ -52,12 +52,12 @@ main (int argc, char *argv[])
 
 	if (verbose)
 	{
-		ns3::LogComponentEnable ("OpenFlowInterface", ns3::LOG_LEVEL_ALL);
-		ns3::LogComponentEnable ("OpenFlowSwitchNetDevice", ns3::LOG_LEVEL_ALL);
-		ns3::LogComponentEnable ("OpenFlowBasicController", ns3::LOG_LEVEL_ALL);
-		ns3::LogComponentEnable ("OpenFlowSpecialController", ns3::LOG_LEVEL_ALL);
-		ns3::LogComponentEnable ("IpsImitation", ns3::LOG_LEVEL_ALL);
-		ns3::LogComponentEnable ("SuperCoreTest", ns3::LOG_LEVEL_ALL);
+		ns3::LogComponentEnable ("OpenFlowInterface", ns3::LOG_LEVEL_INFO);
+		ns3::LogComponentEnable ("OpenFlowSwitchNetDevice", ns3::LOG_LEVEL_INFO);
+		ns3::LogComponentEnable ("OpenFlowBasicController", ns3::LOG_LEVEL_INFO);
+		ns3::LogComponentEnable ("OpenFlowSpecialController", ns3::LOG_LEVEL_INFO);
+		ns3::LogComponentEnable ("IpsImitation", ns3::LOG_LEVEL_INFO);
+		ns3::LogComponentEnable ("SuperCoreTest", ns3::LOG_LEVEL_INFO);
 	}
 
 	int n_terminals = 16;
