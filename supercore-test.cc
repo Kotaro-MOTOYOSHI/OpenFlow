@@ -148,3 +148,37 @@ main (int argc, char *argv[])
 	// [ips imitation (switch 0)] -- [ipsImitation]
 	openFlowSwitchHelper.Install (switchNode[0], switchDevices[0], ipsImitation);
 
+	// [switch 1-2, 7-14] -- [openFlowBasicController]
+	for (int i = 1; i <= 2; i++)
+	{
+		openFlowSwitchHelper.Intall (switchNode[i], switchDevices[i], openFlowBasicController);
+	}
+
+	for (int i = 7; i < n_switches; i++)
+	{
+		openFlowSwitchHelper.Intall (switchNode[i], switchDevices[i], openFlowBasicController);
+	}
+
+	// [switch 3-6] -- [openFlowSpecialController]
+	for (int i = 3; i <= 6; i++)
+	{
+		openFlowSwitchHelper.Intall (switchNode[i], switchDevices[i], openFlowSpecialController);
+	}
+
+	ns3::Ptr<ns3::NetDevice> p_NetDevice;
+	ns3::Ptr<ns3::OpenFlowSwitchNetDevice> p_OpenFlowSwitchNetDevice[n_switches];
+	for (unsigned i = 0; i < (unsigned) n_switches; i++)
+	{
+		for (unsigned j = 0; j < switchNode[i]->GetNDevices (); j++)
+		{
+			p_NetDevice = switchNode[i]->GetDevice (j);
+			NS_LOG_INFO ("device type = " << p_NetDevice->GetInstanceTypeId ().GetName ());
+
+			if(p_NetDevice->GetInstanceTypeId () == ns3::OpenFlowSwitchNetDevice::GetTypeId ())
+			{
+				p_OpenFlowSwitchNetDevice[i] = p_NetDevice->GetObject<ns3::OpenFlowSwitchNetDevice> ();
+				NS_LOG_INFO ("OpenFlowSwitchNetDevice was found. " << p_OpenFlowSwitchNetDevice[i]->GetTypeId ().GetName ());
+			}
+		}
+	}
+
