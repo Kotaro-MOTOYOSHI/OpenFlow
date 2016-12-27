@@ -216,16 +216,16 @@ NS_LOG_INFO("128:");
 	//
 	// Create a similar flow from n3 to n2, starting at time 1.1 seconds
 	//
-//	ns3::OnOffHelper onoff2 ("ns3::TcpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.38"), port)));
-//	onoff2.SetConstantRate (ns3::DataRate ("500kb/s"));
+	ns3::OnOffHelper onoff2 ("ns3::TcpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.11"), port)));
+	onoff2.SetConstantRate (ns3::DataRate ("500kb/s"));
 
-//	app = onoff2.Install (terminals.Get (11));
-//	app.Start (ns3::Seconds (1.1));
-//	app.Stop (ns3::Seconds (10.0));
+	app = onoff2.Install (terminals.Get (8));
+	app.Start (ns3::Seconds (2.0));
+	app.Stop (ns3::Seconds (10.0));
 
 	// Create ana optional packet sink to receive these packets
-//	app = sink.Install (terminals.Get (37));
-//	app.Start (ns3::Seconds (0.0));
+	app = sink.Install (terminals.Get (10));
+	app.Start (ns3::Seconds (0.0));
 
 	NS_LOG_INFO ("Configure Tracing.");
 
