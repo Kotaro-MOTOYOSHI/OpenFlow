@@ -68,7 +68,7 @@ IpsImitation::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, o
 			x[0].port = 0;
 		}
 
-		ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, -1, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, OFP_FLOW_PERMANENT);
+		ofp_flow_mod* ofm = ns3::ofi::Controller::BuildFlow (key, opi->buffer_id, OFPFC_ADD, x, sizeof(x), OFP_FLOW_PERMANENT, OFP_FLOW_PERMANENT);
 		ns3::ofi::Controller::SendToSwitch (swtch, ofm, ofm->header.length);
 	}
 }
