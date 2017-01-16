@@ -4,33 +4,33 @@
 #include "ns3/openflow-switch-net-device.h"
 #include "ns3/assert.h"
 
-NS_LOG_COMPONENT_DEFINE ("OpenFlowSpecialController");
-NS_OBJECT_ENSURE_REGISTERED (OpenFlowSpecialController);
+NS_LOG_COMPONENT_DEFINE ("OpenFlowCoreSwitchController");
+NS_OBJECT_ENSURE_REGISTERED (OpenFlowCoreSwitchController);
 
 ns3::TypeId
-OpenFlowSpecialController::GetTypeId (void)
+OpenFlowCoreSwitchController::GetTypeId (void)
 {
-	static ns3::TypeId tid = ns3::TypeId ("OpenFlowSpecialController")
+	static ns3::TypeId tid = ns3::TypeId ("OpenFlowCoreSwitchController")
 		.SetParent<ns3::ofi::Controller> ()
 		.SetGroupName ("OpenFlow")
-		.AddConstructor<OpenFlowSpecialController> ()
+		.AddConstructor<OpenFlowCoreSwitchController> ()
 		.AddAttribute ("ExpirationTime",
 			"Time it takes for learned MAC state entry/created flow to expire.",
 			ns3::TimeValue (ns3::Seconds (0)),
-			ns3::MakeTimeAccessor (&OpenFlowSpecialController::m_expirationTime),
+			ns3::MakeTimeAccessor (&OpenFlowCoreSwitchController::m_expirationTime),
 			ns3::MakeTimeChecker ())
 		;
 	return tid;
 }
 
 ns3::TypeId
-OpenFlowSpecialController::GetInstanceTypeId () const
+OpenFlowCoreSwitchController::GetInstanceTypeId () const
 {
 	return GetTypeId ();
 }
 
 std::vector<int>
-OpenFlowSpecialController::EnumeratePorts (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, int port)
+OpenFlowCoreSwitchController::EnumeratePorts (const ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, int port)
 {
 	std::vector<int> v;
 	int n_ports = swtch->GetNSwitchPorts ();
@@ -51,7 +51,7 @@ OpenFlowSpecialController::EnumeratePorts (const ns3::Ptr<ns3::OpenFlowSwitchNet
 }
 
 void
-OpenFlowSpecialController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer)
+OpenFlowCoreSwitchController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer)
 {
 	if (m_switches.find (swtch) == m_switches.end ())
 	{
@@ -82,7 +82,7 @@ OpenFlowSpecialController::ReceiveFromSwitch (ns3::Ptr<ns3::OpenFlowSwitchNetDev
 		{
 			NS_LOG_INFO ("Setting Broadcast : this packet is a broadcast packet");
 
-			std::vector<int> v = OpenFlowSpecialController::EnumeratePorts(swtch, in_port);
+			std::vector<int> v = OpenFlowCoreSwitchController::EnumeratePorts(swtch, in_port);
 
 			// Create output-to-port action
 			ofp_action_output x[v.size()];

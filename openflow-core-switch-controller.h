@@ -11,7 +11,7 @@
 #include <memory>
 #include <boost/shared_ptr.hpp>
 
-class OpenFlowSpecialController : public ns3::ofi::Controller
+class OpenFlowCoreSwitchController : public ns3::ofi::Controller
 {
 public:
 	static ns3::TypeId GetTypeId (void);
