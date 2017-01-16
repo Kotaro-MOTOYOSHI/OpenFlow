@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 
-#include "openflow-special-controller.h"
+#include "openflow-core-switch-controller.h"
 #include "ns3/openflow-switch-net-device.h"
 #include "ns3/assert.h"
 

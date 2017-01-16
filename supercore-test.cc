@@ -15,7 +15,7 @@
 #include "ns3/log.h"
 
 #include "openflow-basic-controller.h"
-#include "openflow-special-controller.h"
+#include "openflow-core-switch-controller.h"
 #include "ips-imitation.h"
 
 NS_LOG_COMPONENT_DEFINE ("SuperCoreTest");
@@ -55,7 +55,7 @@ main (int argc, char *argv[])
 		ns3::LogComponentEnable ("OpenFlowInterface", ns3::LOG_LEVEL_INFO);
 		ns3::LogComponentEnable ("OpenFlowSwitchNetDevice", ns3::LOG_LEVEL_INFO);
 		ns3::LogComponentEnable ("OpenFlowBasicController", ns3::LOG_LEVEL_INFO);
-		ns3::LogComponentEnable ("OpenFlowSpecialController", ns3::LOG_LEVEL_INFO);
+		ns3::LogComponentEnable ("OpenFlowCoreSwitchController", ns3::LOG_LEVEL_INFO);
 		ns3::LogComponentEnable ("IpsImitation", ns3::LOG_LEVEL_INFO);
 		ns3::LogComponentEnable ("SuperCoreTest", ns3::LOG_LEVEL_INFO);
 	}
@@ -140,12 +140,12 @@ NS_LOG_INFO("128:");
 	// controller create
 	ns3::Ptr<IpsImitation> ipsImitation = ns3::CreateObject<IpsImitation> ();
 	ns3::Ptr<OpenFlowBasicController> openFlowBasicController = ns3::CreateObject<OpenFlowBasicController> ();
-	ns3::Ptr<OpenFlowSpecialController> openFlowSpecialController = ns3::CreateObject<OpenFlowSpecialController> ();
+	ns3::Ptr<OpenFlowCoreSwitchController> openFlowCoreSwitchController = ns3::CreateObject<OpenFlowCoreSwitchController> ();
 
 	if (!timeout.IsZero ())
 	{
 		openFlowBasicController->SetAttribute ("ExpirationTime", ns3::TimeValue (timeout));
-		openFlowSpecialController->SetAttribute ("ExpirationTime", ns3::TimeValue (timeout));
+		openFlowCoreSwitchController->SetAttribute ("ExpirationTime", ns3::TimeValue (timeout));
 	}
 	
 	// [ips imitation (switch 0)] -- [ipsImitation]
@@ -162,10 +162,10 @@ NS_LOG_INFO("128:");
 		openFlowSwitchHelper.Install (switchNode[i], switchDevices[i], openFlowBasicController);
 	}
 
-	// [switch 3-6] -- [openFlowSpecialController]
+	// [switch 3-6] -- [openFlowCoreSwitchController]
 	for (int i = 3; i <= 6; i++)
 	{
-		openFlowSwitchHelper.Install (switchNode[i], switchDevices[i], openFlowSpecialController);
+		openFlowSwitchHelper.Install (switchNode[i], switchDevices[i], openFlowCoreSwitchController);
 	}
 
 	ns3::Ptr<ns3::NetDevice> p_NetDevice;
