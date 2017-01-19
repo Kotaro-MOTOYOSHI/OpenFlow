@@ -199,10 +199,10 @@ NS_LOG_INFO("128:");
 	NS_LOG_INFO ("Create Applications.");
 	uint16_t port = 9; // Discard port
 	
-	ns3::OnOffHelper onoff ("ns3::TcpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.9"), port)));
+	ns3::OnOffHelper onoff ("ns3::TcpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address ("10.1.1.6"), port)));
 	onoff.SetConstantRate (ns3::DataRate ("500kb/s"));
 
-	ns3::ApplicationContainer app = onoff.Install (terminals.Get (0));
+	ns3::ApplicationContainer app = onoff.Install (terminals.Get (8));
 
 	// Start the application
 	app.Start (ns3::Seconds (1.0));
@@ -210,7 +210,7 @@ NS_LOG_INFO("128:");
 
 	// Create ana optional packet sink to receive these packets
 	ns3::PacketSinkHelper sink ("ns3::TcpSocketFactory", ns3::Address (ns3::InetSocketAddress (ns3::Ipv4Address::GetAny(), port)));
-	app = sink.Install (terminals.Get (8));
+	app = sink.Install (terminals.Get (5));
 	app.Start (ns3::Seconds (0.0));
 
 	//
